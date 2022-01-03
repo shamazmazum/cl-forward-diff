@@ -1,4 +1,5 @@
 # cl-forward-diff
+[![CI](https://github.com/shamazmazum/cl-forward-diff/actions/workflows/test.yml/badge.svg)](https://github.com/shamazmazum/cl-forward-diff/actions/workflows/test.yml)
 
 ## Manual
 **cl-forward-diff** is a Common Lisp system which provides automatic
