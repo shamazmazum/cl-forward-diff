@@ -45,7 +45,7 @@ an example:
    #:cl-forward-diff
    #:+ #:- #:* #:/ #:1+ #:1-
    #:expt)
-  (:export #:fn))
+  (:export #:fn #:fn2 #:fn3))
 (in-package :test)
 
 (defun fn (x)
@@ -55,6 +55,15 @@ an example:
   (let ((x (nth 0 args))
         (y (nth 1 args)))
     (* (1- x) (1+ y))))
+    
+(defun fn3 (coeffs x)
+  (reduce #'+
+          (snakes:generator->list
+           (snakes:imap
+            (lambda (c n)
+              (* c (expt x n)))
+            (snakes:list->generator coeffs)
+            (snakes:icount 0)))))
 ~~~~
 
 You can now calculate the first derivative of `fn`. Suppose you are in `cl-user`
@@ -82,6 +91,13 @@ You can calculate gradient of a function of two or more variables, like
 ~~~~
 CL-USER> (cl-forward-diff:ad-multivariate #'test:fn2 '(2 4))
 (5.0 1.0)
+~~~~
+
+Rather complicated functions also can be differentiated:
+
+~~~~
+CL-USER> (cl-forward-diff:ad-univariate (alexandria:curry #'test:fn3 '(1.0 2.0 1.0)) 5.0)
+12.0
 ~~~~
 
 ## Optimization
