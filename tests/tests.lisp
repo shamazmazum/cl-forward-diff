@@ -9,7 +9,7 @@
                  '(diff))))
 
 (defun almost= (x y)
-  (< (cl:abs (cl:- x y)) 1f-5))
+  (< (cl:abs (cl:- x y)) 1f-3))
 
 (in-suite diff)
 
