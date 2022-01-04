@@ -104,6 +104,31 @@ CL-USER> (cl-forward-diff:ad-univariate (alexandria:curry #'test:fn3 '(1.0 2.0 1
 12.0
 ~~~~
 
+## How to define piecewise functions?
+
+Since differentiable functions must operate with dual numbers and dual numbers
+do not have order, you may ask: how to define piecewise functions like the
+following one?
+
+~~~~{.lisp}
+(defun foo (x)
+  (if (> x 2) x (* 3 x)))
+~~~~
+
+It's easy. Just compare real part of x in the conditional form.
+
+~~~~{.lisp}
+(mapcar
+ (alexandria:curry
+  #'cl-forward-diff:ad-univariate
+  (lambda (x)
+    (if (> (cl-forward-diff:dual-realpart x) 2)
+        x (cl-forward-diff:* 3 x))))
+ '(1 4))
+~~~~
+
+evaluates to `(3.0 1.0)`.
+
 ## Optimization
 
 Now, lets see the assembly code for `test:fn` (aquired with SBCL 2.1.11):
