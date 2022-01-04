@@ -45,10 +45,7 @@ an example:
 ~~~~{.lisp}
 (defpackage test
   (:use #:cl)
-  (:shadowing-import-from
-   #:cl-forward-diff
-   #:+ #:- #:* #:/ #:1+ #:1-
-   #:expt)
+  #.(cl-forward-diff:shadowing-import-math)
   (:export #:fn #:fn2 #:fn3))
 (in-package :test)
 
@@ -176,10 +173,7 @@ Not very impressive, is it? Now let's change our code in the following way:
 ~~~~{.lisp}
 (defpackage test
   (:use #:cl)
-  (:shadowing-import-from
-   #:cl-forward-diff
-   #:+ #:- #:* #:/ #:1+ #:1-
-   #:expt)
+  #.(cl-forward-diff:shadowing-import-math)
   (:export #:fn))
 (in-package :test)
 
