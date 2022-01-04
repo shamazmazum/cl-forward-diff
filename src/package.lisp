@@ -19,5 +19,6 @@
    ;; Exponent and logarithm
    #:exp #:log
    ;; Differentiation helpers
-   #:differentiable-univariate   #:ad-univariate
-   #:differentiable-multivariate #:ad-multivariate))
+   #:ad-univariate #:ad-multivariate
+   ;; Helpers
+   #:shadowing-import-math))

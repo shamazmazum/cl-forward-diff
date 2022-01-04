@@ -33,3 +33,12 @@
           (lambda (x)
             (funcall function (first x)))
           (list x))))
+
+;; Helper for shadowing math functions in defpackage
+(defun shadowing-import-math ()
+  '(:shadowing-import-from
+    #:cl-forward-diff
+    #:= #:+ #:- #:* #:/ #:1+ #:1-
+    #:abs #:signum #:expt #:sqrt
+    #:sin #:cos #:tan
+    #:exp #:log))
