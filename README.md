@@ -16,14 +16,18 @@ structure with two `single-float`s inside:
 ~~~~
 
 The package `cl-forward-diff` provides the following mathematical functions
-which you must use in the functions you want to differentiate: `=`, `+`, `-`,
-`*`, `/`, `1+`, `1-`, `abs`, `signum`, `expt`, `sqrt`, `sin`, `cos`, `tan`,
-`exp`, `log`. These functions operate on type `ext-number` which is an
-abbreviation for `(or dual real)` which means that you cannot differentiate
-complex functions.
+which you must use in the functions you want to differentiate:
 
-These functions are not (yet) implemented: `sinh`, `cosh`, `tanh`, `asin`,
-`acos`, `atan`.
+* Arithmetic/Equality: `=`, `+`, `-`, `*`, `/`, `1+`, `1-`, `abs`, `signum`.
+* Raise-to-power: `expt`, `sqrt`.
+* Trigonometry: `sin`, `cos`, `tan`.
+* Hyperbolic trigonometry: `sinh`, `cosh`, `tanh`.
+* Exponentiation: `exp`, `log`.
+
+These functions operate on type `ext-number` which is an abbreviation for
+`(or dual real)` which means that you cannot differentiate complex functions.
+
+Inverse trigonometric functions (`asin`, `acos`, etc.) are not yet implemented.
 
 These functions defined or behave differently compared to their counterparts in
 `cl` package:
@@ -290,7 +294,8 @@ for more information.
 * Implement better storage for dual numbers (if possible at all). Dual numbers
   must have their own type, so `(cons single-float)` will not do. Also it would
   be nice to make `make-dual` foldable.
-* Implement more math functions (`sinh`, `cosh`, `tanh` etc.)
+* ~~Implement more math functions (`sinh`, `cosh`, `tanh` etc.)~~ Partially
+  done.
 * Implement `=` for number of arguemnts > 2 and fix warnings for `+`, `-`, `*`,
   `/` for this case.
 * ~~Move SBCL transforms to another system, as this is not related to AD.~~

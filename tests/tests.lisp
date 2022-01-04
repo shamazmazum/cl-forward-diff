@@ -28,7 +28,8 @@
     (:trig-poly (+ (* 3 (sin x)) (* 5 (expt (sin x) 2))))
     (:mul       (* (log x) x))
     (:div       (/ x (sin x)))
-    (:compose   (* (some-calculations x) (some-calculations (1- x))))))
+    (:compose   (* (some-calculations x) (some-calculations (1- x))))
+    (:hyper     (+ (* (sinh x) (cosh (* 3 x))) (tanh x)))))
 
 (defun piecewise (x)
   (declare (optimize (speed 3))
@@ -51,6 +52,8 @@
   (is (almost= (ad-univariate (curry #'differentiable-function :compose)
                               (cl:/ pi 6))
                -0.4533825))
+  (is (almost= (ad-univariate (curry #'differentiable-function :hyper) 1.5)
+               393.5443169))
   (is (almost= (ad-univariate #'piecewise 4.5)  1))
   (is (almost= (ad-univariate #'piecewise 5.5) -1)))
 

@@ -4,10 +4,5 @@
    #:cl-forward-diff
    #:dual #:dual-realpart
    #:ad-univariate #:ad-multivariate)
-  (:shadowing-import-from
-   #:cl-forward-diff
-   #:+ #:- #:* #:/ #:expt
-   #:1+ #:1-
-   #:sin #:cos #:tan
-   #:exp #:log)
+  #.(cl-forward-diff:shadowing-import-math)
   (:export #:run-tests))

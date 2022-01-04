@@ -264,7 +264,7 @@
     (make-dual (cl:log re)
                (cl:/ im re))))
 
-;; Trigonometry
+;; Trigonometric
 (defpolymorph sin ((x ext-number))
     dual
   (one-arg-dual-decompose (re im)
@@ -285,6 +285,28 @@
       (promote-to-dual x)
     (make-dual (cl:tan re)
                (cl:/ im (cl:expt (cl:cos re) 2)))))
+
+;; Hyper-trigonometric
+(defpolymorph sinh ((x ext-number))
+    dual
+  (one-arg-dual-decompose (re im)
+      (promote-to-dual x)
+    (make-dual (cl:* (cl:sinh re))
+               (cl:* (cl:cosh re) im))))
+
+(defpolymorph cosh ((x ext-number))
+    dual
+  (one-arg-dual-decompose (re im)
+      (promote-to-dual x)
+    (make-dual (cl:* (cl:cosh re))
+               (cl:* (cl:sinh re) im))))
+
+(defpolymorph tanh ((x ext-number))
+    dual
+  (one-arg-dual-decompose (re im)
+      (promote-to-dual x)
+    (make-dual (cl:tanh re)
+               (cl:/ im (cl:expt (cl:cosh re) 2)))))
 
 ;; Convenient printer/reader for dual numbers. I hope this will not
 ;; affect anyone's reader macro.

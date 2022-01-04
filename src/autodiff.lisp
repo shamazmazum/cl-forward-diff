@@ -41,4 +41,5 @@
     #:= #:+ #:- #:* #:/ #:1+ #:1-
     #:abs #:signum #:expt #:sqrt
     #:sin #:cos #:tan
+    #:sinh #:cosh #:tanh
     #:exp #:log))

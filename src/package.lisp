@@ -5,6 +5,7 @@
    #:= #:+ #:- #:* #:/ #:1+ #:1-
    #:abs #:signum #:expt #:sqrt
    #:sin #:cos #:tan
+   #:sinh #:cosh #:tanh
    #:exp #:log)
   (:export
    ;; Dual numbers
@@ -14,8 +15,10 @@
    #:= #:+ #:- #:* #:/ #:1+ #:1-
    ;; Miscellaneous math functions
    #:expt #:sqrt #:abs #:signum
-   ;; Trigonometry
+   ;; Trigonometric functions
    #:sin #:cos #:tan
+   ;; Hyper trigonometric functions
+   #:sinh #:cosh #:tanh
    ;; Exponent and logarithm
    #:exp #:log
    ;; Differentiation helpers
