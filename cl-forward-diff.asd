@@ -5,12 +5,12 @@
   :description "Automatic differentiation system (forward mode)"
   :serial t
   :pathname "src/"
-  :components (#+sbcl
-               (:file "sbcl-transforms")
-               (:file "package")
+  :components ((:file "package")
                (:file "dual")
                (:file "autodiff"))
-  :depends-on (:polymorphic-functions :serapeum)
+  :depends-on (:sbcl-single-float-tran
+               :polymorphic-functions
+               :serapeum)
   :in-order-to ((test-op (load-op "cl-forward-diff/tests")))
   :perform (test-op (op system)
                     (declare (ignore op system))

@@ -280,58 +280,10 @@ literals like this `#D(3.0 1.0)` which is a shortcut for `(make-dual 3.0 1.0)`.
 
 On SBCL IR1 transformations are added to some of math functions
 (e.g. trigonometric functions) which produce the code that uses `sinf`, `cosf`
-etc. instead of double float versions `sin`, `cos` etc.
+etc. instead of double float versions `sin`, `cos` etc. See
+[sbcl-single-float-tran](https://github.com/shamazmazum/sbcl-single-float-tran)
+for more information.
 
-Consider this code:
-
-~~~~{.lisp}
-(defun foo (x)
-  (declare (optimize (speed 3))
-           (type (single-float 0f0) x))
-  (+ (log x) (log (- x))))
-~~~~
-
-and the produced assembly:
-
-~~~~
-CL-USER> (disassemble 'foo)
-; disassembly for FOO
-; Size: 115 bytes. Origin: #x229D95AD                         ; FOO
-; 5AD:       488BDC           MOV RBX, RSP
-; 5B0:       4883E4F0         AND RSP, -16
-; 5B4:       F30F1045F8       MOVSS XMM0, [RBP-8]
-; 5B9:       B801000000       MOV EAX, 1
-; 5BE:       FF1425B8140020   CALL QWORD PTR [#x200014B8]     ; logf
-; 5C5:       488BE3           MOV RSP, RBX
-; 5C8:       0F28C8           MOVAPS XMM1, XMM0
-; 5CB:       F30F114DF0       MOVSS [RBP-16], XMM1
-; 5D0:       F30F1045F8       MOVSS XMM0, [RBP-8]
-; 5D5:       0F570574FFFFFF   XORPS XMM0, [RIP-140]           ; [#x229D9550]
-; 5DC:       4883EC10         SUB RSP, 16
-; 5E0:       660F7EC2         MOVD EDX, XMM0
-; 5E4:       48C1E220         SHL RDX, 32
-; 5E8:       80CA19           OR DL, 25
-; 5EB:       B902000000       MOV ECX, 2
-; 5F0:       48892C24         MOV [RSP], RBP
-; 5F4:       488BEC           MOV RBP, RSP
-; 5F7:       B8021E3720       MOV EAX, #x20371E02             ; #<FDEFN LOG>
-; 5FC:       FFD0             CALL RAX
-; 5FE:       F30F104DF0       MOVSS XMM1, [RBP-16]
-; 603:       488BFA           MOV RDI, RDX
-; 606:       660F7ECA         MOVD EDX, XMM1
-; 60A:       48C1E220         SHL RDX, 32
-; 60E:       80CA19           OR DL, 25
-; 611:       FF1425E800A021   CALL QWORD PTR [#x21A000E8]     ; GENERIC-+
-; 618:       488BE5           MOV RSP, RBP
-; 61B:       F8               CLC
-; 61C:       5D               POP RBP
-; 61D:       C3               RET
-; 61E:       CC10             INT3 16                         ; Invalid argument count trap
-NIL
-~~~~
-
-As you can see, `logf` from libm is used when appropriate, and `LOG` (Common
-Lisp function) when not.
 
 ## TODO
 
@@ -341,7 +293,8 @@ Lisp function) when not.
 * Implement more math functions (`sinh`, `cosh`, `tanh` etc.)
 * Implement `=` for number of arguemnts > 2 and fix warnings for `+`, `-`, `*`,
   `/` for this case.
-* Move SBCL transforms to another system, as this is not related to AD.
+* ~~Move SBCL transforms to another system, as this is not related to AD.~~
+  Done.
 
 ## Discussion (in the form of FAQ)
 
