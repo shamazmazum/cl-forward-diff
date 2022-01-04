@@ -40,11 +40,18 @@
      ,@body))
 
 ;; Arithmetic functions for dual numbers
-(declaim (inline two-arg-dual-=
+(declaim (inline two-arg-dual-/=
+                 two-arg-dual-=
                  two-arg-dual-+
                  two-arg-dual--
                  two-arg-dual-*
                  two-arg-dual-/))
+
+(defun two-arg-dual-/= (x y)
+  (two-arg-dual-decompose (x-re x-im y-re y-im)
+      (x y)
+    (or (cl:/= x-re y-re)
+        (cl:/= x-im y-im))))
 
 (defun two-arg-dual-= (x y)
   (two-arg-dual-decompose (x-re x-im y-re y-im)
@@ -80,13 +87,14 @@
                      (cl:expt y-re 2)))))
 
 ;; Arithmetic and equality polymorphs
-(define-polymorphic-function = (number &rest numbers))
-(define-polymorphic-function + (&rest numbers))
-(define-polymorphic-function - (number &rest numbers))
-(define-polymorphic-function * (&rest numbers))
-(define-polymorphic-function / (number &rest numbers))
+(define-polymorphic-function /= (number &rest numbers))
+(define-polymorphic-function =  (number &rest numbers))
+(define-polymorphic-function +  (&rest numbers))
+(define-polymorphic-function -  (number &rest numbers))
+(define-polymorphic-function *  (&rest numbers))
+(define-polymorphic-function /  (number &rest numbers))
 
-;;
+;; =
 (defpolymorph = ((x ext-number))
     (values (eql t) &optional)
   (declare (ignore x))
@@ -99,13 +107,32 @@
    (promote-to-dual x)
    (promote-to-dual y)))
 
-#|
 (defpolymorph (= :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
     (values boolean &optional)
-  ...)
-|#
+  (if (= x y)
+      (apply #'= y (car numbers) (cdr numbers))))
+
+;; /=
+(defpolymorph /= ((x ext-number))
+    (values (eql t) &optional)
+  (declare (ignore x))
+  t)
+
+(defpolymorph /= ((x ext-number)
+                  (y ext-number))
+    (values boolean &optional)
+  (two-arg-dual-/=
+   (promote-to-dual x)
+   (promote-to-dual y)))
+
+(defpolymorph (/= :inline t) ((x ext-number)
+                              (y ext-number)
+                              &rest numbers)
+    (values boolean &optional)
+  (if (/= x y)
+      (apply #'/= y (car numbers) (cdr numbers))))
 
 ;; +
 (defpolymorph + () (eql 0) 0)
@@ -318,7 +345,7 @@
 (defun read-dual (stream subchar arg)
   (declare (ignore arg))
   (let ((list (read stream)))
-    (when (/= (length list) 2)
+    (when (cl:/= (length list) 2)
       (error "Cannot read: #~c~a"
              subchar list))
     `(make-dual ,(first  list) ,(second list))))

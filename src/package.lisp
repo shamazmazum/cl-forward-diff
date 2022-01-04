@@ -2,7 +2,7 @@
   (:local-nicknames (:sera :serapeum))
   (:use #:cl #:polymorphic-functions)
   (:shadow
-   #:= #:+ #:- #:* #:/ #:1+ #:1-
+   #:/= #:= #:+ #:- #:* #:/ #:1+ #:1-
    #:abs #:signum #:expt #:sqrt
    #:sin #:cos #:tan
    #:sinh #:cosh #:tanh
@@ -11,8 +11,10 @@
    ;; Dual numbers
    #:ext-number #:dual
    #:make-dual #:dual-realpart #:dual-imagpart
+   ;; Equality
+   #:= #:/=
    ;; Arithmetic functions
-   #:= #:+ #:- #:* #:/ #:1+ #:1-
+   #:+ #:- #:* #:/ #:1+ #:1-
    ;; Miscellaneous math functions
    #:expt #:sqrt #:abs #:signum
    ;; Trigonometric functions

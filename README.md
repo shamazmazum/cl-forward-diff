@@ -18,7 +18,8 @@ structure with two `single-float`s inside:
 The package `cl-forward-diff` provides the following mathematical functions
 which you must use in the functions you want to differentiate:
 
-* Arithmetic/Equality: `=`, `+`, `-`, `*`, `/`, `1+`, `1-`, `abs`, `signum`.
+* Equality: `=`, `/=`.
+* Arithmetic: `+`, `-`, `*`, `/`, `1+`, `1-`, `abs`, `signum`.
 * Raise-to-power: `expt`, `sqrt`.
 * Trigonometry: `sin`, `cos`, `tan`.
 * Hyperbolic trigonometry: `sinh`, `cosh`, `tanh`.
@@ -36,8 +37,6 @@ These functions defined or behave differently compared to their counterparts in
 |------------|-------------------------------------------------------------|
 | `sqrt`     | Returns run-time error when called with negative argument.  |
 | `log`      | Does not have optional argument. Also see `sqrt`.           |
-| `=`        | Variant with number of arguments > 2 is not yet defined.    |
-| `+`/`-`/`*`/`/` | Variants with number of arguments > 2 are not optimal. |
 
 Functions to de differentiated are bestly defined within a package which shadows
 math functions from `cl` package with ones from `cl-forward-diff` package. See
@@ -296,10 +295,10 @@ for more information.
   be nice to make `make-dual` foldable.
 * ~~Implement more math functions (`sinh`, `cosh`, `tanh` etc.)~~ Partially
   done.
-* Implement `=` for number of arguemnts > 2 and fix warnings for `+`, `-`, `*`,
-  `/` for this case.
+* ~~Implement `=` for number of arguemnts > 2.~~ Done
 * ~~Move SBCL transforms to another system, as this is not related to AD.~~
   Done.
+* Maybe optimize `=`, `/=`, `+`, `-`, `*`, `/` for number of arguments > 2?
 
 ## Discussion (in the form of FAQ)
 

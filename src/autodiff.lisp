@@ -38,7 +38,8 @@
 (defun shadowing-import-math ()
   '(:shadowing-import-from
     #:cl-forward-diff
-    #:= #:+ #:- #:* #:/ #:1+ #:1-
+    #:= #:/=
+    #:+ #:- #:* #:/ #:1+ #:1-
     #:abs #:signum #:expt #:sqrt
     #:sin #:cos #:tan
     #:sinh #:cosh #:tanh

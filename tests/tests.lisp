@@ -37,6 +37,17 @@
   (if (evenp (floor (dual-realpart x)))
       x (- x)))
 
+(test equality
+  (is-true  (= #d(3.0 4.0) #d(3.0 4.0)))
+  (is-false (= #d(3.0 4.0) #d(3.0 5.0)))
+  (is-true  (= #d(3.0 4.0) #d(3.0 4.0) #d(3.0 4.0)))
+  (is-false (= #d(3.0 4.0) #d(3.0 4.0) #d(3.0 4.1)))
+
+  (is-true  (/= #d(3.0 4.0) #d(3.0 4.4)))
+  (is-false (/= #d(3.0 4.0) #d(3.0 4.0)))
+  (is-true  (/= #d(3.3 4.0) #d(3.0 4.0) #d(3.0 4.1)))
+  (is-false (/= #d(3.0 4.0) #d(3.0 4.0) #d(3.0 4.1))))
+
 (test diff-univariate
   (is (almost= (ad-univariate (curry #'differentiable-function :poly) 2)
                23))
