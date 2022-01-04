@@ -11,6 +11,8 @@
    ;; Dual numbers
    #:ext-number #:dual
    #:make-dual #:dual-realpart #:dual-imagpart
+   ;; Function types
+   #:differentiable-multivariate #:differentiable-univariate
    ;; Equality
    #:= #:/=
    ;; Arithmetic functions
