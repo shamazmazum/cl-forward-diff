@@ -344,10 +344,11 @@
 
 (defun read-dual (stream subchar arg)
   (declare (ignore arg))
-  (let ((list (read stream)))
-    (when (cl:/= (length list) 2)
-      (error "Cannot read: #~c~a"
-             subchar list))
-    `(make-dual ,(first  list) ,(second list))))
+  (let ((list (read stream t nil t)))
+    (if (and (listp list)
+             (cl:= (length list) 2))
+        (make-dual (first  list) (second list))
+        (error "Cannot read: #~c~a"
+               subchar list))))
 
 (set-dispatch-macro-character #\# #\D #'read-dual)
