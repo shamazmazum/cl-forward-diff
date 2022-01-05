@@ -152,10 +152,9 @@
                              (y ext-number)
                              &rest numbers)
     (values dual &optional)
-  (reduce (lambda (acc x)
-            (two-arg-dual-+ acc (promote-to-dual x)))
-          numbers
-          :initial-value (+ x y)))
+  (apply #'+ (+ x y)
+         (car numbers)
+         (cdr numbers)))
 
 ;; -
 (defpolymorph (- :inline t) ((x ext-number))
@@ -173,10 +172,9 @@
                              (y ext-number)
                              &rest numbers)
     (values dual &optional)
-  (reduce (lambda (acc x)
-            (two-arg-dual-- acc (promote-to-dual x)))
-          numbers
-          :initial-value (- x y)))
+  (apply #'- (- x y)
+         (car numbers)
+         (cdr numbers)))
 
 ;; * (maybe add some special cases like (* x 2) = (+ x x))
 (defpolymorph * () (eql 1) 1)
@@ -196,10 +194,9 @@
                              (y ext-number)
                              &rest numbers)
     (values dual &optional)
-  (reduce (lambda (acc x)
-            (two-arg-dual-* acc (promote-to-dual x)))
-          numbers
-          :initial-value (* x y)))
+  (apply #'* (* x y)
+         (car numbers)
+         (cdr numbers)))
 
 ;; /
 (defpolymorph (/ :inline t) ((x ext-number))
@@ -217,10 +214,9 @@
                              (y ext-number)
                              &rest numbers)
     (values dual &optional)
-  (reduce (lambda (acc x)
-            (two-arg-dual-/ acc (promote-to-dual x)))
-          numbers
-          :initial-value (/ x y)))
+  (apply #'/ (/ x y)
+         (car numbers)
+         (cdr numbers)))
 
 ;; Miscellaneous math functions
 (define-polymorphic-function expt (base power))
