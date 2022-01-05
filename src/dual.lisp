@@ -7,6 +7,9 @@
   (realpart 0f0 :type single-float)
   (imagpart 0f0 :type single-float))
 
+;; These functions could be foldable, but this causes infinite
+;; recursion when MAKE-LOAD-FORM is called many times.
+
 #+sbcl
 (sb-c:defknown make-dual (single-float single-float) dual
     (sb-c:movable sb-c:flushable))
@@ -337,6 +340,10 @@
   (format stream "#D(~f ~f)"
           (dual-realpart dual)
           (dual-imagpart dual)))
+
+(defmethod make-load-form ((dual dual) &optional environment)
+  (declare (ignore environment))
+  `(make-dual ,(dual-realpart dual) ,(dual-imagpart dual)))
 
 (defun read-dual (stream subchar arg)
   (declare (ignore arg))
