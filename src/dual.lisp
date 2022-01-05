@@ -30,17 +30,23 @@
 (defpolymorph promote-to-dual ((x dual)) dual
   x)
 
-(defmacro two-arg-dual-decompose ((x-re x-im y-re y-im) (x y) &body body)
-  `(let ((,x-re (dual-realpart ,x))
-         (,x-im (dual-imagpart ,x))
-         (,y-re (dual-realpart ,y))
-         (,y-im (dual-imagpart ,y)))
-     ,@body))
+(defmacro two-arg-dual-decompose ((x-re x-im y-re y-im) (x-form y-form) &body body)
+  (let ((x (gensym))
+        (y (gensym)))
+    `(let* ((,x ,x-form)
+            (,y ,y-form)
+            (,x-re (dual-realpart ,x))
+            (,x-im (dual-imagpart ,x))
+            (,y-re (dual-realpart ,y))
+            (,y-im (dual-imagpart ,y)))
+       ,@body)))
 
-(defmacro one-arg-dual-decompose ((re im) x &body body)
-  `(let ((,re (dual-realpart ,x))
-         (,im (dual-imagpart ,x)))
-     ,@body))
+(defmacro one-arg-dual-decompose ((re im) x-form &body body)
+  (let ((x (gensym)))
+    `(let* ((,x ,x-form)
+            (,re (dual-realpart ,x))
+            (,im (dual-imagpart ,x)))
+       ,@body)))
 
 ;; Arithmetic functions for dual numbers
 (declaim (inline two-arg-dual-/=
