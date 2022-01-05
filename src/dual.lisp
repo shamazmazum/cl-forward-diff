@@ -199,6 +199,12 @@
    (promote-to-dual x)
    (promote-to-dual y)))
 
+(defpolymorph * ((x ext-number)
+                 (y (eql 2)))
+    (values dual &optional)
+  (declare (ignore y))
+  (+ x x))
+
 (defpolymorph (* :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
@@ -226,6 +232,11 @@
   (apply #'/ (/ x y)
          (car numbers)
          (cdr numbers)))
+
+#+sbcl
+(sb-c:defknown (+ *) (&rest ext-number) dual
+    (sb-c:movable sb-c:flushable sb-c::commutative)
+  :overwrite-fndb-silently t)
 
 ;; Miscellaneous math functions
 (define-polymorphic-function expt (base power))
