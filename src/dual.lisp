@@ -182,12 +182,26 @@
          (car numbers)
          (cdr numbers)))
 
-;; * (maybe add some special cases like (* x 2) = (+ x x))
 (defpolymorph * () (eql 1) 1)
 
 (defpolymorph * ((x ext-number))
     (values ext-number &optional)
   x)
+
+;; sb-c:commutative for the poorest
+;; Since SBCL doesn't apply its magical optimizations for inlined
+;; functions, I must do this by hand.
+(defpolymorph * ((x (eql 2))
+                 (y ext-number))
+    (values dual &optional)
+  (declare (ignore x))
+  (+ y y))
+
+(defpolymorph * ((x ext-number)
+                 (y (eql 2)))
+    (values dual &optional)
+  (declare (ignore y))
+  (+ x x))
 
 (defpolymorph * ((x ext-number)
                  (y ext-number))
