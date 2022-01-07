@@ -360,3 +360,16 @@
                subchar list))))
 
 (set-dispatch-macro-character #\# #\D #'read-dual)
+
+(macrolet ((binary-expander (op)
+             `(defpolymorph-compiler-macro ,op (ext-number ext-number &rest)
+                  (x y &rest numbers)
+                (reduce
+                 (lambda (acc number)
+                   (list ',op acc number))
+                 numbers
+                 :initial-value (list ',op x y)))))
+  (binary-expander *)
+  (binary-expander +)
+  (binary-expander -)
+  (binary-expander /))
