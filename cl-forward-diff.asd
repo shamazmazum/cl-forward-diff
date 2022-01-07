@@ -8,7 +8,7 @@
   :components ((:file "package")
                (:file "dual")
                (:file "autodiff"))
-  :depends-on (:sbcl-single-float-tran
+  :depends-on ((:feature :single-float-tran :sbcl-single-float-tran)
                :polymorphic-functions
                :serapeum)
   :in-order-to ((test-op (load-op "cl-forward-diff/tests")))

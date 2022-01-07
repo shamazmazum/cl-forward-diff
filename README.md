@@ -300,9 +300,10 @@ So there are a general rules for optimization:
 Reader macro `#D` is added to the readtable. It allows you to create dual number
 literals like this `#D(3.0 1.0)` which is a shortcut for `(make-dual 3.0 1.0)`.
 
-On SBCL IR1 transformations are added to some of math functions
-(e.g. trigonometric functions) which produce the code that uses `sinf`, `cosf`
-etc. instead of double float versions `sin`, `cos` etc. See
+On SBCL, when feature `:single-float-tran` is present IR1 transformations are
+added to some of math functions (e.g. trigonometric functions) which produce the
+code that uses `sinf`, `cosf` etc. instead of double float versions `sin`, `cos`
+etc. See
 [sbcl-single-float-tran](https://github.com/shamazmazum/sbcl-single-float-tran)
 for more information.
 
