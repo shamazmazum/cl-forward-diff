@@ -7,12 +7,9 @@
   (realpart 0f0 :type single-float)
   (imagpart 0f0 :type single-float))
 
-;; These functions could be foldable, but this causes infinite
-;; recursion when MAKE-LOAD-FORM is called many times.
-
 #+sbcl
 (sb-c:defknown make-dual (single-float single-float) dual
-    (sb-c:movable sb-c:flushable))
+    (sb-c:movable sb-c:foldable sb-c:flushable))
 
 (sera:-> make-dual
          (single-float single-float)
@@ -349,14 +346,16 @@
 
 (defmethod make-load-form ((dual dual) &optional environment)
   (declare (ignore environment))
-  `(make-dual ,(dual-realpart dual) ,(dual-imagpart dual)))
+  `(make-dual% :realpart ,(dual-realpart dual)
+               :imagpart ,(dual-imagpart dual)))
 
 (defun read-dual (stream subchar arg)
   (declare (ignore arg))
   (let ((list (read stream t nil t)))
     (if (and (listp list)
              (cl:= (length list) 2))
-        (make-dual (first  list) (second list))
+        (make-dual% :realpart (first  list)
+                    :imagpart (second list))
         (error "Cannot read: #~c~a"
                subchar list))))
 
