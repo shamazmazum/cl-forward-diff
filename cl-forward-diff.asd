@@ -3,6 +3,7 @@
   :version "0.1"
   :author "Vasily Postnicov <shamaz.mazum@gmail.com>"
   :description "Automatic differentiation system (forward mode)"
+  :licence "2-clause BSD"
   :serial t
   :pathname "src/"
   :components ((:file "package")
@@ -21,6 +22,7 @@
   :name :cl-forward-diff/tests
   :version "0.1"
   :author "Vasily Postnicov <shamaz.mazum@gmail.com>"
+  :licence "2-clause BSD"
   :components ((:file "tests/package")
                (:file "tests/tests" :depends-on ("tests/package")))
   :depends-on (:fiveam :alexandria :cl-forward-diff))
