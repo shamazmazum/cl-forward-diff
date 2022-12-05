@@ -2,10 +2,9 @@
 
 ;; Since there are not parametric types in CL, just define real and
 ;; imaginary parts to be single-float
-(declaim (inline make-dual%))
-(defstruct (dual (:constructor make-dual%))
-  (realpart 0f0 :type single-float)
-  (imagpart 0f0 :type single-float))
+(sera:defconstructor dual
+  (realpart single-float)
+  (imagpart single-float))
 
 #+sbcl
 (sb-c:defknown make-dual (single-float single-float) dual
@@ -15,7 +14,7 @@
          (single-float single-float)
          (values dual &optional))
 (defun make-dual (x y)
-  (make-dual% :realpart x :imagpart y))
+  (dual x y))
 
 (deftype ext-number () '(or dual real))
 
@@ -360,16 +359,16 @@
 
 (defmethod make-load-form ((dual dual) &optional environment)
   (declare (ignore environment))
-  `(make-dual% :realpart ,(dual-realpart dual)
-               :imagpart ,(dual-imagpart dual)))
+  `(dual ,(dual-realpart dual)
+         ,(dual-imagpart dual)))
 
 (defun read-dual (stream subchar arg)
   (declare (ignore arg))
   (let ((list (read stream t nil t)))
     (if (and (listp list)
              (cl:= (length list) 2))
-        (make-dual% :realpart (first  list)
-                    :imagpart (second list))
+        (dual (first  list)
+              (second list))
         (error "Cannot read: #~c~a"
                subchar list))))
 
