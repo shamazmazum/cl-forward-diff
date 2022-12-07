@@ -115,13 +115,13 @@
 
 ;; =
 (defpolymorph = ((x ext-number))
-    (values (eql t) &optional)
+    (eql t)
   (declare (ignore x))
   t)
 
 (defpolymorph = ((x ext-number)
                  (y ext-number))
-    (values boolean &optional)
+    boolean
   (two-arg-dual-=
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -129,19 +129,19 @@
 (defpolymorph (= :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
-    (values boolean &optional)
+    boolean
   (if (= x y)
       (apply #'= y (car numbers) (cdr numbers))))
 
 ;; /=
 (defpolymorph /= ((x ext-number))
-    (values (eql t) &optional)
+    (eql t)
   (declare (ignore x))
   t)
 
 (defpolymorph /= ((x ext-number)
                   (y ext-number))
-    (values boolean &optional)
+    boolean
   (two-arg-dual-/=
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -149,7 +149,7 @@
 (defpolymorph (/= :inline t) ((x ext-number)
                               (y ext-number)
                               &rest numbers)
-    (values boolean &optional)
+    boolean
   (if (/= x y)
       (apply #'/= y (car numbers) (cdr numbers))))
 
@@ -157,12 +157,12 @@
 (defpolymorph + () (eql 0) 0)
 
 (defpolymorph + ((x ext-number))
-    (values ext-number &optional)
+    ext-number
   x)
 
 (defpolymorph + ((x ext-number)
                  (y ext-number))
-    (values dual &optional)
+    dual
   (two-arg-dual-+
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -170,19 +170,19 @@
 (defpolymorph (+ :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
-    (values dual &optional)
+    dual
   (apply #'+ (+ x y)
          (car numbers)
          (cdr numbers)))
 
 ;; -
 (defpolymorph (- :inline t) ((x ext-number))
-    (values ext-number &optional)
+    ext-number
   (- (+) x))
 
 (defpolymorph - ((x ext-number)
                  (y ext-number))
-    (values dual &optional)
+    dual
   (two-arg-dual--
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -190,7 +190,7 @@
 (defpolymorph (- :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
-    (values dual &optional)
+    dual
   (apply #'- (- x y)
          (car numbers)
          (cdr numbers)))
@@ -198,17 +198,17 @@
 (defpolymorph * () (eql 1) 1)
 
 (defpolymorph * ((x ext-number))
-    (values ext-number &optional)
+    ext-number
   x)
 
 ;; max
 (defpolymorph max ((x ext-number))
-    (values ext-number &optional)
+    ext-number
   x)
 
 (defpolymorph max ((x ext-number)
                    (y ext-number))
-    (values dual &optional)
+    dual
   (two-arg-dual-max
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -216,19 +216,19 @@
 (defpolymorph (max :inline t) ((x ext-number)
                                (y ext-number)
                                &rest numbers)
-    (values dual &optional)
+    dual
   (apply #'max (max x y)
          (car numbers)
          (cdr numbers)))
 
 ;; min
 (defpolymorph min ((x ext-number))
-    (values ext-number &optional)
+    ext-number
   x)
 
 (defpolymorph min ((x ext-number)
                    (y ext-number))
-    (values dual &optional)
+    dual
   (two-arg-dual-min
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -236,7 +236,7 @@
 (defpolymorph (min :inline t) ((x ext-number)
                                (y ext-number)
                                &rest numbers)
-    (values dual &optional)
+    dual
   (apply #'min (min x y)
          (car numbers)
          (cdr numbers)))
@@ -246,19 +246,19 @@
 ;; functions, I must do this by hand.
 (defpolymorph * ((x (eql 2))
                  (y ext-number))
-    (values dual &optional)
+    dual
   (declare (ignore x))
   (+ y y))
 
 (defpolymorph * ((x ext-number)
                  (y (eql 2)))
-    (values dual &optional)
+    dual
   (declare (ignore y))
   (+ x x))
 
 (defpolymorph * ((x ext-number)
                  (y ext-number))
-    (values dual &optional)
+    dual
   (two-arg-dual-*
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -266,19 +266,19 @@
 (defpolymorph (* :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
-    (values dual &optional)
+    dual
   (apply #'* (* x y)
          (car numbers)
          (cdr numbers)))
 
 ;; /
 (defpolymorph (/ :inline t) ((x ext-number))
-    (values ext-number &optional)
+    ext-number
   (/ (*) x))
 
 (defpolymorph / ((x ext-number)
                  (y ext-number))
-    (values dual &optional)
+    dual
   (two-arg-dual-/
    (promote-to-dual x)
    (promote-to-dual y)))
@@ -286,7 +286,7 @@
 (defpolymorph (/ :inline t) ((x ext-number)
                              (y ext-number)
                              &rest numbers)
-    (values dual &optional)
+    dual
   (apply #'/ (/ x y)
          (car numbers)
          (cdr numbers)))
