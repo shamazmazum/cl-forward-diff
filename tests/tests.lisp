@@ -29,7 +29,9 @@
     (:mul       (* (log x) x))
     (:div       (/ x (sin x)))
     (:compose   (* (some-calculations x) (some-calculations (1- x))))
-    (:hyper     (+ (* (sinh x) (cosh (* 3 x))) (tanh x)))))
+    (:hyper     (+ (* (sinh x) (cosh (* 3 x))) (tanh x)))
+    (:min       (min x (expt x 2)))
+    (:max       (max x (expt x 2)))))
 
 (defun piecewise (x)
   (declare (optimize (speed 3))
@@ -65,6 +67,10 @@
                -0.4533825))
   (is (almost= (ad-univariate (curry #'differentiable-function :hyper) 1.5)
                393.5443169))
+  (is (almost= (ad-univariate (curry #'differentiable-function :min) 0.2) 0.4))
+  (is (almost= (ad-univariate (curry #'differentiable-function :min) 3.0) 1.0))
+  (is (almost= (ad-univariate (curry #'differentiable-function :max) 0.2) 1.0))
+  (is (almost= (ad-univariate (curry #'differentiable-function :max) 3.0) 6.0))
   (is (almost= (ad-univariate #'piecewise 4.5)  1))
   (is (almost= (ad-univariate #'piecewise 5.5) -1)))
 

@@ -43,4 +43,5 @@
     #:abs #:signum #:expt #:sqrt
     #:sin #:cos #:tan
     #:sinh #:cosh #:tanh
-    #:exp #:log))
+    #:exp #:log
+    #:min #:max))

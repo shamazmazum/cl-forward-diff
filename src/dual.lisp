@@ -50,7 +50,9 @@
                  two-arg-dual-+
                  two-arg-dual--
                  two-arg-dual-*
-                 two-arg-dual-/))
+                 two-arg-dual-/
+                 two-arg-dual-min
+                 two-arg-dual-max))
 
 (defun two-arg-dual-/= (x y)
   (two-arg-dual-decompose (x-re x-im y-re y-im)
@@ -91,13 +93,25 @@
                            (cl:* x-re y-im))
                      (cl:expt y-re 2)))))
 
-;; Arithmetic and equality polymorphs
-(define-polymorphic-function /= (number &rest numbers))
-(define-polymorphic-function =  (number &rest numbers))
-(define-polymorphic-function +  (&rest numbers))
-(define-polymorphic-function -  (number &rest numbers))
-(define-polymorphic-function *  (&rest numbers))
-(define-polymorphic-function /  (number &rest numbers))
+(defun two-arg-dual-min (x y)
+  (if (< (dual-realpart x)
+         (dual-realpart y))
+      x y))
+
+(defun two-arg-dual-max (x y)
+  (if (> (dual-realpart x)
+         (dual-realpart y))
+      x y))
+
+;; Arithmetic, min/max and equality polymorphs
+(define-polymorphic-function /=  (number &rest numbers))
+(define-polymorphic-function =   (number &rest numbers))
+(define-polymorphic-function +   (&rest numbers))
+(define-polymorphic-function -   (number &rest numbers))
+(define-polymorphic-function *   (&rest numbers))
+(define-polymorphic-function /   (number &rest numbers))
+(define-polymorphic-function min (number &rest numbers))
+(define-polymorphic-function max (number &rest numbers))
 
 ;; =
 (defpolymorph = ((x ext-number))
@@ -186,6 +200,46 @@
 (defpolymorph * ((x ext-number))
     (values ext-number &optional)
   x)
+
+;; max
+(defpolymorph max ((x ext-number))
+    (values ext-number &optional)
+  x)
+
+(defpolymorph max ((x ext-number)
+                   (y ext-number))
+    (values dual &optional)
+  (two-arg-dual-max
+   (promote-to-dual x)
+   (promote-to-dual y)))
+
+(defpolymorph (max :inline t) ((x ext-number)
+                               (y ext-number)
+                               &rest numbers)
+    (values dual &optional)
+  (apply #'max (max x y)
+         (car numbers)
+         (cdr numbers)))
+
+;; min
+(defpolymorph min ((x ext-number))
+    (values ext-number &optional)
+  x)
+
+(defpolymorph min ((x ext-number)
+                   (y ext-number))
+    (values dual &optional)
+  (two-arg-dual-min
+   (promote-to-dual x)
+   (promote-to-dual y)))
+
+(defpolymorph (min :inline t) ((x ext-number)
+                               (y ext-number)
+                               &rest numbers)
+    (values dual &optional)
+  (apply #'min (min x y)
+         (car numbers)
+         (cdr numbers)))
 
 ;; sb-c:commutative for the poorest
 ;; Since SBCL doesn't apply its magical optimizations for inlined

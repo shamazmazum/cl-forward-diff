@@ -6,7 +6,7 @@
    #:abs #:signum #:expt #:sqrt
    #:sin #:cos #:tan
    #:sinh #:cosh #:tanh
-   #:exp #:log)
+   #:exp #:log #:min #:max)
   (:export
    ;; Dual numbers
    #:ext-number #:dual
@@ -25,6 +25,8 @@
    #:sinh #:cosh #:tanh
    ;; Exponent and logarithm
    #:exp #:log
+   ;; Minimum and maximum
+   #:min #:max
    ;; Differentiation helpers
    #:ad-univariate #:ad-multivariate
    ;; Helpers
