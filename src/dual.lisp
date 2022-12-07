@@ -8,7 +8,8 @@
 
 #+sbcl
 (sb-c:defknown make-dual (single-float single-float) dual
-    (sb-c:movable sb-c:foldable sb-c:flushable))
+    (sb-c:movable sb-c:foldable sb-c:flushable)
+  :overwrite-fndb-silently t)
 
 (sera:-> make-dual
          (single-float single-float)
