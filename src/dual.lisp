@@ -173,67 +173,46 @@
       (t
        `(two-arg-/ ,number (* ,@more-numbers))))))
 
-;; FIXME: can be defined together with some macro
 ;; 1+
-(declare-inline-math 1+ (ext-number) dual)
-(defun 1+ (x)
-  (+ x 1))
+(macrolet ((define-inc-dec (name op)
+             `(progn
+                (declare-inline-math ,name (ext-number) dual)
+                (defun ,name (x)
+                  (,op x 1)))))
+  (define-inc-dec 1+ +)
+  (define-inc-dec 1- -))
 
-;; 1-
-(declare-inline-math 1- (ext-number) dual)
-(defun 1- (x)
-  (- x 1))
-
-;; FIXME: can be defined together with some macro
 ;;;; min/max
+(macrolet ((define-min-max (name op)
+             (let ((two-arg-name (intern
+                                  (concatenate 'string "TWO-ARG-"
+                                               (symbol-name name)))))
+               `(progn
+                  (declare-inline-2 ,two-arg-name dual)
+                  (defun ,two-arg-name (x y)
+                    (let ((x (promote x))
+                          (y (promote y)))
+                      (if (,op (dual-realpart x)
+                               (dual-realpart y))
+                          x y)))
 
-;; min
-(declare-inline-2 two-arg-min dual)
-(defun two-arg-min (x y)
-  (if (< (dual-realpart x)
-         (dual-realpart y))
-      x y))
+                  (declare-inline-math ,name (ext-number &rest ext-number) dual)
+                  (defun ,name (number &rest more-numbers)
+                    (if (cl:= (length more-numbers) 0) number
+                        (,two-arg-name number (reduce #',two-arg-name more-numbers))))
 
-(declare-inline-math min (ext-number &rest ext-number) dual)
-(defun min (number &rest more-numbers)
-  (if (cl:= (length more-numbers) 0)
-      number
-      (two-arg-min number (reduce #'two-arg-min more-numbers))))
-
-(define-compiler-macro min (number &rest more-numbers)
-  (let ((length (length more-numbers)))
-    (cond
-      ((cl:= length 0) number)
-      ((cl:= length 1)
-       `(two-arg-min ,number ,(car more-numbers)))
-      (t
-       (reduce (lambda (acc number)
-                 `(two-arg-min ,number ,acc))
-               more-numbers :initial-value number)))))
-
-;; max
-(declare-inline-2 two-arg-max dual)
-(defun two-arg-max (x y)
-  (if (> (dual-realpart x)
-         (dual-realpart y))
-      x y))
-
-(declare-inline-math max (ext-number &rest ext-number) dual)
-(defun max (number &rest more-numbers)
-  (if (cl:= (length more-numbers) 0)
-      number
-      (two-arg-max number (reduce #'two-arg-max more-numbers))))
-
-(define-compiler-macro max (number &rest more-numbers)
-  (let ((length (length more-numbers)))
-    (cond
-      ((cl:= length 0) number)
-      ((cl:= length 1)
-       `(two-arg-max ,number ,(car more-numbers)))
-      (t
-       (reduce (lambda (acc number)
-                 `(two-arg-max ,number ,acc))
-               more-numbers :initial-value number)))))
+                  (define-compiler-macro ,name (number &rest more-numbers)
+                    (let ((length (length more-numbers)))
+                      (cond
+                        ((cl:= length 0) number)
+                        ((cl:= length 1)
+                         (list ',two-arg-name number (car more-numbers)))
+                        (t
+                         (reduce (lambda (acc number)
+                                   (list ',two-arg-name number acc))
+                                 more-numbers :initial-value number)))))))))
+  (define-min-max min <)
+  (define-min-max max >))
 
 ;;;; Miscellaneous math functions
 
