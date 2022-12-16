@@ -3,10 +3,9 @@
 (def-suite diff :description "Check differentiation")
 
 (defun run-tests ()
-  (every #'identity
-         (mapcar (lambda (suite)
-                   (explain! (run suite)))
-                 '(diff))))
+  (let ((status (run 'diff)))
+    (explain! status)
+    (results-status status)))
 
 (defun ≈ (x y)
   (< (cl:abs (cl:- x y)) 1d-6))
