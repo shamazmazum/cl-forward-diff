@@ -3,7 +3,7 @@
                     (:simd :sb-simd-avx))
   (:use #:cl)
   (:shadow
-   #:/= #:= #:+ #:- #:* #:/ #:1+ #:1-
+   #:+ #:- #:* #:/ #:1+ #:1-
    #:abs #:signum #:expt #:sqrt
    #:sin #:cos #:tan
    #:sinh #:cosh #:tanh
@@ -14,8 +14,6 @@
    #:make-dual #:dual-realpart #:dual-imagpart
    ;; Function types
    #:differentiable-multivariate #:differentiable-univariate
-   ;; Equality
-   #:= #:/=
    ;; Arithmetic functions
    #:+ #:- #:* #:/ #:1+ #:1-
    ;; Miscellaneous math functions

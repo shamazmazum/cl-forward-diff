@@ -52,56 +52,6 @@
      (sera:-> ,name (ext-number ext-number)
               (values ,return-type &optional))))
 
-;;;; Comparisons
-
-;; =
-(declare-inline-2 two-arg-= boolean)
-(defun two-arg-= (x y)
-  (let ((mask (simd:u64.2-movemask
-               (simd:f64.2= (promote x)
-                            (promote y)))))
-    (cl:= mask #b11)))
-
-(declare-inline-math = (ext-number &rest ext-number) boolean)
-(defun = (number &rest more-numbers)
-  (let ((mask (simd:u64.2-movemask
-               (apply #'simd:f64.2=
-                      (promote number)
-                      (mapcar #'promote more-numbers)))))
-    (cl:= mask #b11)))
-
-(define-compiler-macro = (&whole whole number &rest more-numbers)
-  (let ((length (length more-numbers)))
-    (cond
-      ((cl:= length 0) t)
-      ((cl:= length 1)
-       `(two-arg-= ,number ,(car more-numbers)))
-      (t whole))))
-
-;; /=
-(declare-inline-2 two-arg-/= boolean)
-(defun two-arg-/= (x y)
-  (let ((mask (simd:u64.2-movemask
-               (simd:f64.2/= (promote x)
-                             (promote y)))))
-    (cl:/= mask 0)))
-
-(declare-inline-math /= (ext-number &rest ext-number) boolean)
-(defun /= (number &rest more-numbers)
-  (let ((mask (simd:u64.2-movemask
-               (apply #'simd:f64.2/=
-                      (promote number)
-                      (mapcar #'promote more-numbers)))))
-    (cl:/= mask 0)))
-
-(define-compiler-macro /= (&whole whole number &rest more-numbers)
-  (let ((length (length more-numbers)))
-    (cond
-      ((cl:= length 0) t)
-      ((cl:= length 1)
-       `(two-arg-/= ,number ,(car more-numbers)))
-      (t whole))))
-
 ;;;; Arithmetic functions
 
 ;; +
