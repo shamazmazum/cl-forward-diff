@@ -1,3 +1,6 @@
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require 'sb-simd))
+
 (defsystem :cl-forward-diff
   :name :cl-forward-diff
   :version "0.1"
@@ -9,7 +12,7 @@
   :components ((:file "package")
                (:file "dual")
                (:file "autodiff"))
-  :depends-on (:polymorphic-functions :serapeum)
+  :depends-on (:serapeum)
   :in-order-to ((test-op (load-op "cl-forward-diff/tests")))
   :perform (test-op (op system)
                     (declare (ignore op system))

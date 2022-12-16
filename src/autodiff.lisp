@@ -1,6 +1,6 @@
 (in-package :cl-forward-diff)
 
-;; List of single-floats, I cannot express it in CL
+;; List of double-floats, I cannot express it in CL
 (deftype differentiable-multivariate ()
   '(sera:-> (list) (values dual &optional)))
 
@@ -15,17 +15,18 @@
         for i below length collect
        (dual-imagpart
         (funcall function
-                 (loop for j from 0 by 1 for x in xs collect
-                      (make-dual (float x 0f0)
+                 (loop for j from 0 by 1
+                       for x in xs collect
+                      (make-dual (float x 0d0)
                                  (if (cl:= i j)
-                                     1f0 0f0)))))))
+                                     1d0 0d0)))))))
 
 (deftype differentiable-univariate ()
   '(sera:-> (dual) (values dual &optional)))
 
 (sera:-> ad-univariate
          (differentiable-univariate real)
-         (values single-float &optional))
+         (values double-float &optional))
 (defun ad-univariate (function x)
   (declare (optimize (speed 3))
            (type differentiable-univariate function))

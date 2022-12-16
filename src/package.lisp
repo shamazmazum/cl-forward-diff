@@ -1,6 +1,7 @@
 (defpackage cl-forward-diff
-  (:local-nicknames (:sera :serapeum))
-  (:use #:cl #:polymorphic-functions)
+  (:local-nicknames (:sera :serapeum)
+                    (:simd :sb-simd-avx))
+  (:use #:cl)
   (:shadow
    #:/= #:= #:+ #:- #:* #:/ #:1+ #:1-
    #:abs #:signum #:expt #:sqrt

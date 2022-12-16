@@ -40,15 +40,15 @@
       x (- x)))
 
 (test equality
-  (is-true  (= #d(3.0 4.0) #d(3.0 4.0)))
-  (is-false (= #d(3.0 4.0) #d(3.0 5.0)))
-  (is-true  (= #d(3.0 4.0) #d(3.0 4.0) #d(3.0 4.0)))
-  (is-false (= #d(3.0 4.0) #d(3.0 4.0) #d(3.0 4.1)))
+  (is-true  (= #d(3d0 4d0) #d(3d0 4d0)))
+  (is-false (= #d(3d0 4d0) #d(3d0 5d0)))
+  (is-true  (= #d(3d0 4d0) #d(3d0 4d0) #d(3d0 4d0)))
+  (is-false (= #d(3d0 4d0) #d(3d0 4d0) #d(3d0 4d1)))
 
-  (is-true  (/= #d(3.0 4.0) #d(3.0 4.4)))
-  (is-false (/= #d(3.0 4.0) #d(3.0 4.0)))
-  (is-true  (/= #d(3.3 4.0) #d(3.0 4.0) #d(3.0 4.1)))
-  (is-false (/= #d(3.0 4.0) #d(3.0 4.0) #d(3.0 4.1))))
+  (is-true  (/= #d(3d0 4d0) #d(3d0 4d4)))
+  (is-false (/= #d(3d0 4d0) #d(3d0 4d0)))
+  (is-true  (/= #d(3d3 4d0) #d(3d0 4d0) #d(3d0 4d1)))
+  (is-false (/= #d(3d0 4d0) #d(3d0 4d0) #d(3d0 4d1))))
 
 (test diff-univariate
   (is (almost= (ad-univariate (curry #'differentiable-function :poly) 2)
