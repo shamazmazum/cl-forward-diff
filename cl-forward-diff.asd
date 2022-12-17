@@ -1,5 +1,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require 'sb-simd))
+  (ignore-errors
+    (require 'sb-simd)
+    (push :sb-simd *features*)))
 
 (defsystem :cl-forward-diff
   :name :cl-forward-diff
@@ -9,7 +11,8 @@
   :licence "2-clause BSD"
   :serial t
   :pathname "src"
-  :components ((:file "package")
+  :components ((:file "ultralisp-hack" :if-feature (:not :sb-simd))
+               (:file "package")
                (:file "dual")
                (:file "autodiff"))
   :depends-on (:serapeum)
