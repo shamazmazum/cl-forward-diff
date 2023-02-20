@@ -5,10 +5,10 @@
 
 (declaim (inline make-dual))
 (sera:-> make-dual
-         (double-float double-float)
+         (double-float &optional double-float)
          (values dual &optional))
-(defun make-dual (x y)
-  (simd:make-f64.2 x y))
+(defun make-dual (realpart &optional (imagpart 0d0))
+  (simd:make-f64.2 realpart imagpart))
 
 (declaim (inline dual-realpart))
 (sera:-> dual-realpart (dual)
