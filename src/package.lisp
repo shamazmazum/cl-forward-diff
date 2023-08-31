@@ -9,6 +9,8 @@
    #:sinh #:cosh #:tanh
    #:exp #:log #:min #:max)
   (:export
+   ;; Conditions
+   #:complex-result
    ;; Dual numbers
    #:ext-number #:dual
    #:make-dual #:dual-realpart #:dual-imagpart

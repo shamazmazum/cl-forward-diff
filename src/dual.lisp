@@ -3,6 +3,13 @@
 (deftype dual () '(sb-ext:simd-pack double-float))
 (deftype ext-number () '(or dual real))
 
+(define-condition complex-result (error)
+  ()
+  (:report
+   (lambda (c s)
+     (declare (ignore c))
+     (format s "The result of operation is known to be complex"))))
+
 (declaim (inline make-dual))
 (sera:-> make-dual
          (double-float &optional double-float)
@@ -217,18 +224,43 @@
 ;;;; Miscellaneous math functions
 
 ;; expt
+(declaim (inline real-expt))
+(sera:-> real-expt (real real)
+         (values real &optional))
+(defun real-expt (base power)
+  "EXPT which signals an error instead of returning COMPLEX result"
+  (if (and (< base 0)
+           (not (integerp power)))
+      (error 'complex-result)
+      (cl:expt base power)))
+
 (declare-inline-math expt (ext-number real) dual)
 (defun expt (base power)
   (one-arg-decompose (re im)
       (promote base)
     (simd:make-f64.2
+     (cl:* (real-expt re power))
+     (cl:* (real-expt re (cl:1- power)) power im))))
+
+(declare-inline-math positive-re-expt (ext-number real) dual)
+(defun positive-re-expt (base power)
+  "EXPT for dual numbers with surely non-negative real part"
+  (one-arg-decompose (re im)
+      (promote base)
+    (declare (type (double-float 0d0) re))
+    (simd:make-f64.2
      (cl:* (cl:expt re power))
      (cl:* (cl:expt re (cl:1- power)) power im))))
 
 (define-compiler-macro expt (&whole whole base power)
-  (if (eql power 2)
-      `(two-arg-* ,base ,base)
-      whole))
+  (cond
+    ((eql power 2)
+     `(two-arg-* ,base ,base))
+    ;; Useful for generalized Euclidean metrics
+    ((and (listp base)
+          (eq (first base) 'abs))
+     `(positive-re-expt ,base ,power))
+    (t whole)))
 
 ;; abs
 (declare-inline-math abs (ext-number) dual)

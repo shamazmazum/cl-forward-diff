@@ -38,6 +38,21 @@
   (if (evenp (floor (dual-realpart x)))
       x (- x)))
 
+(defun expt-calc-1 (x)
+  (declare (optimize (speed 3))
+           (type dual x))
+  (expt (abs (1- x)) 2.5d0))
+
+(defun expt-calc-2 (x)
+  (declare (optimize (speed 3))
+           (type dual x))
+  (expt (sin x) 2.5d0))
+
+(defun expt-calc-3 (x)
+  (declare (optimize (speed 3))
+           (type dual x))
+  (expt x 3))
+
 (test diff-univariate
   (is (≈ (ad-univariate (curry #'differentiable-function :poly) 2)
          23))
@@ -60,7 +75,11 @@
   (is (≈ (ad-univariate (curry #'differentiable-function :max) 0.2) 1.0))
   (is (≈ (ad-univariate (curry #'differentiable-function :max) 3.0) 6.0))
   (is (≈ (ad-univariate #'piecewise 4.5)  1))
-  (is (≈ (ad-univariate #'piecewise 5.5) -1)))
+  (is (≈ (ad-univariate #'piecewise 5.5) -1))
+  (is (≈ (ad-univariate #'expt-calc-1 3.0) 7.071068))
+  (is (≈ (ad-univariate #'expt-calc-1 -1.0) -7.071068))
+  (is (≈ (ad-univariate #'expt-calc-2 0.4) 0.55956817))
+  (is (≈ (ad-univariate #'expt-calc-3 3) 27)))
 
 (defun multivar (list)
   (declare (optimize (speed 3)))
