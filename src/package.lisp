@@ -29,6 +29,6 @@
    ;; Minimum and maximum
    #:min #:max
    ;; Differentiation helpers
-   #:ad-univariate #:ad-multivariate
+   #:ad-univariate #:ad-multivariate #:to-doubles
    ;; Helpers
    #:shadowing-import-math))

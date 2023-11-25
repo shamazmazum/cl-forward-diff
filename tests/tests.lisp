@@ -81,14 +81,13 @@
   (is (≈ (ad-univariate #'expt-calc-2 0.4) 0.55956817))
   (is (≈ (ad-univariate #'expt-calc-3 3) 27)))
 
-(defun multivar (list)
-  (declare (optimize (speed 3)))
-  (destructuring-bind (x y)
-      list
-    (declare (type dual x y))
-    (/ (log x) (cos y))))
+(defun multivar (xs)
+  (declare (optimize (speed 3))
+           (type (simple-array dual (cl:*)) xs))
+  (/ (log (aref xs 0))
+     (cos (aref xs 1))))
 
 (test diff-multivariate
   (is-true (every #'≈
-                  (ad-multivariate #'multivar '(2 3))
+                  (ad-multivariate #'multivar (to-doubles '(2 3)))
                   '(-0.50505435d0 0.09980452d0))))
