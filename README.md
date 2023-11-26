@@ -1,18 +1,6 @@
 # cl-forward-diff
 [![CI](https://github.com/shamazmazum/cl-forward-diff/actions/workflows/test.yml/badge.svg)](https://github.com/shamazmazum/cl-forward-diff/actions/workflows/test.yml)
 
-## New in version 0.2
-
-This section can be skipped if this is the first time you use
-**cl-forward-diff**.
-
-* Dual numbers are now stored in XMM registers whenever possible. This requires
-  SBCL > 2.2.6.
-* Now components of dual numbers are floats with double precision.
-* Dual numbers are printed as unreadable objects, but you still can use #D macro
-  for literals.
-* Tests for (in)equality (`/=`, `=`) are removed. I did not found any use cases
-  for them anyway.
 
 ## Manual
 **cl-forward-diff** is a Common Lisp system which provides automatic
@@ -64,8 +52,8 @@ an example:
   (1+ (* (expt (1- x) 2) 2)))
 
 (defun fn2 (args)
-  (let ((x (nth 0 args))
-        (y (nth 1 args)))
+  (let ((x (aref args 0))
+        (y (aref args 1)))
     (* (1- x) (1+ y))))
     
 (defun fn3 (coeffs x)
@@ -101,8 +89,9 @@ You can calculate gradient of a function of two or more variables, like
 `test:fn2`, using `ad-multivariate`.
 
 ``` lisp
-CL-USER> (cl-forward-diff:ad-multivariate #'test:fn2 '(2 4))
-(5.0d0 1.0d0)
+CL-USER> (cl-forward-diff:ad-multivariate
+           #'test:fn2 (cl-forward-diff:to-doubles '(2 4)))
+#(5.0d0 1.0d0)
 ```
 
 Rather complicated functions also can be differentiated:
@@ -114,7 +103,7 @@ CL-USER> (cl-forward-diff:ad-univariate (alexandria:curry #'test:fn3 '(1 2 1)) 5
 
 ## How to define piecewise functions?
 
-Since differentiable functions must operate with dual numbers and dual numbers
+Since differentiable functions must operate on dual numbers and dual numbers
 do not have order, you may ask: how to define piecewise functions like the
 following one?
 
@@ -143,7 +132,8 @@ If you want to write performat code, stick to these rules:
 
 1. Use `(declare (optimize (speed 3)))` in functions you want to optimize.
 2. Numerical arguments to differentiable functions must be of type `dual`. In
-   case of using `ad-multivariate` the function must accept a list of `dual`s.
+   case of using `ad-multivariate` the function must accept a simple array of
+   `dual`s.
 3. Differentiable functions must return one value of type `dual`. Again, you may
    wish to use toplevel declarations to make hints to the compiler, like
    `(serapeum:-> fn (dual) (values dual &optional))`.
@@ -154,11 +144,6 @@ literals like this `#D(3d0 1d0)` which is a shortcut for `(make-dual 3d0 1d0)`.
 
 ## Discussion (in the form of FAQ)
 
-* *Question*: Why pass arguments to a function which is differentiated by
-  `ad-multivariate` in a list rather than in a vector?  
-  *Answer*: Altough you can specify a type of elements of a vector (which makes
-  type handling easier), working with vectors is a bit more difficult than with
-  lists. This is why I chose lists.
 * *Question*: What's the difference between this system and
   [masonium/cl-autodiff](https://github.com/masonium/cl-autodiff)?  
   *Answer*: cl-autodiff works with some hard macro preprocessing and has special
