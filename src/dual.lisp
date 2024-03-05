@@ -125,8 +125,7 @@
 (defun * (&rest numbers)
   (if (= (length numbers) 0)
       (promote 1)
-      (reduce #'two-arg-*
-              (mapcar #'promote numbers))))
+      (reduce #'two-arg-* numbers :key #'promote)))
 
 (define-compiler-macro * (&rest numbers)
   (let ((length (length numbers)))
