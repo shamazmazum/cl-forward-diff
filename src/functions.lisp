@@ -30,7 +30,7 @@
 (define-arith-0 * two-arg-* 1)
 
 (sb-c:deftransform two-arg-*
-    ((x y) (ext-number (sb-int:constant-arg (member 2 2.0 2d0))) cl:*)
+    ((x y) (dual (sb-int:constant-arg (member 2 2.0 2d0))) cl:*)
   '(+ x x))
 
 ;; Special cases (DUAL * REAL and REAL * DUAL).
