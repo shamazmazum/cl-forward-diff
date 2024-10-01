@@ -94,6 +94,19 @@
             (dual (,dual-fn (promote-to-dual x) y))
             (real (,real-fn x y))))))
 
+     (sb-c:defoptimizer (,name sb-c:derive-type) ((x y))
+       (let ((dual (sb-kernel:specifier-type 'dual))
+             (real (sb-kernel:specifier-type 'real))
+             (x-type (sb-c::lvar-type x))
+             (y-type (sb-c::lvar-type y)))
+         (cond
+           ((and (sb-kernel:csubtypep x-type real)
+                 (sb-kernel:csubtypep y-type real))
+            (sb-kernel:numeric-contagion x y))
+           ((or (sb-kernel:csubtypep x-type dual)
+                (sb-kernel:csubtypep y-type dual))
+            dual))))
+
      (sb-c:deftransform ,name ((x y) (dual dual) cl:*)
        '(,dual-fn x y))
 
