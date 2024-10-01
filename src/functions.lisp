@@ -69,10 +69,13 @@
 (define-two-arg-fn two-arg-/ dual-dual-/ cl:/)
 (define-arith-1 / two-arg-/ 1)
 
-;; The single special case: DUAL / REAL
-;; We can save some computations, as with *
+;; We can save some computations, as with * for DUAL / REAL
 (sb-c:deftransform two-arg-/ ((x y) (dual real) cl:*)
   '(simd:f64.2/ x (fill-dual-vector y)))
+
+;; To avoid calling of TWO-ARG-/
+(sb-c:deftransform two-arg-/ ((x y) (real dual) cl:*)
+  '(* x (expt y -1)))
 
 ;; 1+ / 1-
 ;; I guess I just inline these
