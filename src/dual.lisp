@@ -172,6 +172,35 @@
                      more-numbers
                      :initial-value number))))))
 
+;; Type derivation helper for irrational functions.
+;; Like the one in src/compiler/float-tran.lisp, but simplier
+(defun irrat-derive-type (arg &optional low high)
+  (flet ((make-float-type (&optional format)
+           (sb-kernel:make-numeric-type
+                   :class  'float
+                   :format format
+                   :low    low
+                   :high   high)))
+    (let ((dual (sb-kernel:specifier-type 'dual))
+          (real (sb-kernel:specifier-type 'real))
+          (type (sb-c::lvar-type arg)))
+      (when (sb-kernel:csubtypep type (sb-kernel:type-union dual real))
+        ;; REAL-PART = ARG-TYPE \ DUAL, i.e. what we know about the
+        ;; real part of the union.
+        (let ((real-part (sb-kernel:type-intersection type real)))
+          (if (sb-kernel:numeric-type-p real-part)
+              ;; REAL-PART can be expressed by NUMERIC-TYPE, e.g. it
+              ;; is a subtype of INTEGER or DOUBLE-FLOAT.
+              (sb-kernel:type-union
+               dual (make-float-type
+                     (case (sb-kernel:numeric-type-class real-part)
+                       ((integer rational) 'single-float)
+                       (t (sb-kernel:numeric-type-format real-part)))))
+              ;; REAL-PART is a subtype of REAL which cannot be
+              ;; expressed by the means of NUMERIC-TYPE.
+              (sb-kernel:type-union
+               dual (make-float-type))))))))
+
 ;; Convenient reader for dual numbers. I hope this will not affect
 ;; anyone's reader macro.
 (defun read-dual (stream subchar arg)
