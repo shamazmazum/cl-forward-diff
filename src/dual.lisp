@@ -10,6 +10,7 @@
      (declare (ignore c))
      (format s "The result of operation is known to be complex"))))
 
+;; Working with dual type
 (declaim (inline make-dual))
 (sera:-> make-dual
          (double-float &optional double-float)
@@ -29,341 +30,134 @@
 (defun dual-imagpart (x)
   (nth-value 1 (simd:f64.2-values x)))
 
-(defmacro one-arg-decompose ((re im) x-form &body body)
+(defmacro decompose-dual ((re im) form &body body)
   `(multiple-value-bind (,re ,im)
-       (simd:f64.2-values ,x-form)
+       (simd:f64.2-values ,form)
      ,@body))
 
-(defmacro two-args-decompose ((x-re x-im y-re y-im)
-                              (x-form y-form) &body body)
-  `(one-arg-decompose (,x-re ,x-im) ,x-form
-     (one-arg-decompose (,y-re ,y-im) ,y-form
-       ,@body)))
+(defmacro decompose-args ((&rest args) &body body)
+  (car
+   (reduce
+    (lambda (arg acc)
+      (destructuring-bind (re im form) arg
+        `((decompose-dual (,re ,im) ,form
+            ,@acc))))
+    args
+    :initial-value body
+    :from-end t)))
 
-(declaim (inline promote))
-(defun promote (x)
-  (if (typep x '(sb-ext:simd-pack double-float)) x
-      (simd:make-f64.2 (float x 0d0) 0d0)))
+(declaim (inline promote-to-dual))
+(sera:-> promote-to-dual (ext-number) (values dual &optional))
+(defun promote-to-dual (x)
+  "If x is real, make a dual number (x, 0), otherwise return x"
+  (etypecase x
+    (real (make-dual (float x 0d0)))
+    (dual x)))
 
-;;;; Helper macros
-(defmacro declare-inline-math (name args-type return-type)
+(declaim (inline fill-dual-vector))
+(sera:-> fill-dual-vector (real) (values dual &optional))
+(defun fill-dual-vector (x)
+  "Make a dual number (x, x)"
+  (let ((x (float x 0d0)))
+    (make-dual x x)))
+
+
+;; Helper macros
+
+(defmacro define-one-arg-fn (name dual-fn real-fn)
+  "Define an unary function with the name NAME"
+  `(progn
+     (defun ,name (x)
+       (declare (sb-int:explicit-check))
+       (etypecase x
+         (dual (,dual-fn x))
+         (real (,real-fn x))))
+
+     (sb-c:deftransform ,name ((x) (dual) cl:*)
+       '(,dual-fn x))
+
+     (sb-c:deftransform ,name ((x) (real) cl:*)
+       '(,real-fn x))))
+
+(defmacro define-two-arg-fn (name dual-fn real-fn)
+  "Define a binary function with the name NAME"
+  `(progn
+     (defun ,name (x y)
+       (declare (sb-int:explicit-check))
+       (etypecase x
+         (dual
+          (etypecase y
+            (dual (,dual-fn x y))
+            (real (,dual-fn x (promote-to-dual y)))))
+         (real
+          (etypecase y
+            (dual (,dual-fn (promote-to-dual x) y))
+            (real (,real-fn x y))))))
+
+     (sb-c:deftransform ,name ((x y) (dual dual) cl:*)
+       '(,dual-fn x y))
+
+     (sb-c:deftransform ,name ((x y) (real real) cl:*)
+       '(,real-fn x y))))
+
+(defmacro define-arith-0 (name two-arg-fn identity)
+  "Define arithmetic functions with signature (&REST NUMBERS)."
   `(progn
      (declaim (inline ,name))
-     (sera:-> ,name
-              ,args-type
-              (values ,return-type &optional))))
+     (sera:-> ,name (&rest ext-number) (values ext-number &optional))
+     (defun ,name (&rest numbers)
+       (reduce #',two-arg-fn numbers :initial-value ,identity))
+     (define-compiler-macro ,name (&rest numbers)
+       (cond
+         ((null numbers) ,identity)
+         ((null (cdr numbers))
+          (car numbers))
+         (t
+          (reduce (lambda (acc number)
+                    (list ',two-arg-fn acc number))
+                  numbers))))))
 
-(defmacro declare-inline-2 (name return-type)
+(defmacro define-arith-1 (name two-arg-fn identity)
+  "Define arithmetic functions with signature (NUMBER &REST MORE-NUMBERS)."
   `(progn
      (declaim (inline ,name))
-     (sera:-> ,name (ext-number ext-number)
-              (values ,return-type &optional))))
+     (sera:-> ,name (ext-number &rest ext-number) (values ext-number &optional))
+     (defun ,name (number &rest more-numbers)
+       (if more-numbers
+           (reduce #',two-arg-fn more-numbers :initial-value number)
+           (,two-arg-fn ,identity number)))
+     (define-compiler-macro ,name (number &rest more-numbers)
+       (if (null more-numbers)
+           (list ',two-arg-fn ,identity number)
+           (reduce
+            (lambda (acc x) (list ',two-arg-fn acc x))
+            more-numbers
+            :initial-value number)))))
 
-;;;; Arithmetic functions
+(defmacro define-min-max (name op cl-fn)
+  "Define MIN or MAX. This is a special case."
+  (let ((dual-dual-fn (intern (format nil "DUAL-DUAL-~a" name)))
+        (two-arg-fn (intern (format nil "TWO-ARG-~a" name))))
+    `(progn
+       (declaim (inline ,dual-dual-fn))
+       (sera:-> ,dual-dual-fn (dual dual)
+                (values dual &optional))
+       (defun ,dual-dual-fn (x y)
+         (if (,op (dual-realpart x)
+                  (dual-realpart y))
+             x y))
 
-;; +
-(declare-inline-2 two-arg-+ dual)
-(defun two-arg-+ (x y)
-  (simd:f64.2+
-   (promote x)
-   (promote y)))
+       (define-two-arg-fn ,two-arg-fn ,dual-dual-fn ,cl-fn)
 
-(declare-inline-math + (&rest ext-number) dual)
-(defun + (&rest numbers)
-  (apply #'simd:f64.2+ (mapcar #'promote numbers)))
-
-(define-compiler-macro + (&rest numbers)
-  (let ((length (length numbers)))
-    (cond
-      ((cl:= length 0)
-       (promote 0))
-      ((cl:= length 1)
-       (first numbers))
-      ((cl:= length 2)
-       `(two-arg-+ ,(first  numbers)
-                   ,(second numbers)))
-      (t
-       (reduce (lambda (acc number)
-                 `(two-arg-+ ,number ,acc))
-               numbers)))))
-
-;; -
-(declare-inline-2 two-arg-- dual)
-(defun two-arg-- (x y)
-  (simd:f64.2-
-   (promote x)
-   (promote y)))
-
-(declare-inline-math - (ext-number &rest ext-number) dual)
-(defun - (number &rest more-numbers)
-  (apply #'simd:f64.2-
-         (promote number)
-         (mapcar #'promote more-numbers)))
-
-(define-compiler-macro - (number &rest more-numbers)
-  (let ((length (length more-numbers)))
-    (cond
-      ((cl:= length 0)
-       `(two-arg-- 0 ,number))
-      ((cl:= length 1)
-       `(two-arg-- ,number ,(car more-numbers)))
-      (t
-       `(two-arg-- ,number (+ ,@more-numbers))))))
-
-;; *
-(declare-inline-2 two-arg-* dual)
-(defun two-arg-* (x y)
-  (two-args-decompose (x-re x-im y-re y-im)
-      ((promote x) (promote y))
-    (simd:make-f64.2
-     (cl:* x-re y-re)
-     (cl:+
-      (cl:* x-re y-im)
-      (cl:* x-im y-re)))))
-
-(declare-inline-math * (&rest ext-number) dual)
-(defun * (&rest numbers)
-  (if (= (length numbers) 0)
-      (promote 1)
-      (reduce #'two-arg-* numbers :key #'promote)))
-
-(define-compiler-macro * (&rest numbers)
-  (let ((length (length numbers)))
-    (cond
-      ((cl:= length 0)
-       (promote 1))
-      ((cl:= length 1)
-       (first numbers))
-      ((cl:= length 2)
-       (destructuring-bind (first second)
-           numbers
-         (cond
-           ((eql first 2)
-            `(two-arg-+ ,second ,second))
-           ((eql second 2)
-            `(two-arg-+ ,first ,first))
-           (t
-            `(two-arg-* ,first ,second)))))
-      (t
-       (reduce (lambda (acc number)
-                 `(two-arg-* ,number ,acc))
-               numbers)))))
-
-;; /
-(declare-inline-2 two-arg-/ dual)
-(defun two-arg-/ (x y)
-  (two-args-decompose (x-re x-im y-re y-im)
-      ((promote x) (promote y))
-    (simd:make-f64.2
-     (cl:/ x-re y-re)
-     (cl:/
-      (cl:-
-       (cl:* y-re x-im)
-       (cl:* x-re y-im))
-      (cl:expt y-re 2)))))
-
-(declare-inline-math / (ext-number &rest ext-number) dual)
-(defun / (number &rest more-numbers)
-  (if (= (length more-numbers) 0)
-      (two-arg-/ (promote 1) number)
-      (two-arg-/ number
-                 (apply #'* more-numbers))))
-
-(define-compiler-macro / (number &rest more-numbers)
-  (let ((length (length more-numbers)))
-    (cond
-      ((cl:= length 0)
-       `(two-arg-/ 1 ,number))
-      ((cl:= length 1)
-       `(two-arg-/ ,number ,(car more-numbers)))
-      (t
-       `(two-arg-/ ,number (* ,@more-numbers))))))
-
-;; 1+
-(macrolet ((define-inc-dec (name op)
-             `(progn
-                (declare-inline-math ,name (ext-number) dual)
-                (defun ,name (x)
-                  (,op x 1)))))
-  (define-inc-dec 1+ +)
-  (define-inc-dec 1- -))
-
-;;;; min/max
-(macrolet ((define-min-max (name op)
-             (let ((two-arg-name (intern
-                                  (concatenate 'string "TWO-ARG-"
-                                               (symbol-name name)))))
-               `(progn
-                  (declare-inline-2 ,two-arg-name dual)
-                  (defun ,two-arg-name (x y)
-                    (let ((x (promote x))
-                          (y (promote y)))
-                      (if (,op (dual-realpart x)
-                               (dual-realpart y))
-                          x y)))
-
-                  (declare-inline-math ,name (ext-number &rest ext-number) dual)
-                  (defun ,name (number &rest more-numbers)
-                    (if (cl:= (length more-numbers) 0) number
-                        (,two-arg-name number (reduce #',two-arg-name more-numbers))))
-
-                  (define-compiler-macro ,name (number &rest more-numbers)
-                    (let ((length (length more-numbers)))
-                      (cond
-                        ((cl:= length 0) number)
-                        ((cl:= length 1)
-                         (list ',two-arg-name number (car more-numbers)))
-                        (t
-                         (reduce (lambda (acc number)
-                                   (list ',two-arg-name number acc))
-                                 more-numbers :initial-value number)))))))))
-  (define-min-max min <)
-  (define-min-max max >))
-
-;;;; Miscellaneous math functions
-
-;; expt
-(declaim (inline real-expt))
-(sera:-> real-expt (real real)
-         (values real &optional))
-(defun real-expt (base power)
-  "EXPT which signals an error instead of returning COMPLEX result"
-  (if (and (< base 0)
-           (not (integerp power)))
-      (error 'complex-result)
-      (cl:expt base power)))
-
-(declare-inline-math expt (ext-number real) dual)
-(defun expt (base power)
-  (one-arg-decompose (re im)
-      (promote base)
-    (simd:make-f64.2
-     (cl:* (real-expt re power))
-     (cl:* (real-expt re (cl:1- power)) power im))))
-
-(declare-inline-math positive-re-expt (ext-number real) dual)
-(defun positive-re-expt (base power)
-  "EXPT for dual numbers with surely non-negative real part"
-  (one-arg-decompose (re im)
-      (promote base)
-    (declare (type (double-float 0d0) re))
-    (simd:make-f64.2
-     (cl:* (cl:expt re power))
-     (cl:* (cl:expt re (cl:1- power)) power im))))
-
-(define-compiler-macro expt (&whole whole base power)
-  (cond
-    ((eql power 2)
-     `(two-arg-* ,base ,base))
-    ;; Useful for generalized Euclidean metrics
-    ((and (listp base)
-          (eq (first base) 'abs))
-     `(positive-re-expt ,base ,power))
-    (t whole)))
-
-;; abs
-(declare-inline-math abs (ext-number) dual)
-(defun abs (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:* (cl:abs re))
-     (cl:* (cl:signum re) im))))
-
-;; signum
-(declare-inline-math signum (ext-number) dual)
-(defun signum (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (declare (ignore im))
-    (simd:make-f64.2 (cl:signum re) 0d0)))
-
-;; sqrt
-(declare-inline-math sqrt (ext-number) dual)
-(defun sqrt (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (declare (type (double-float 0d0) re))
-    (simd:make-f64.2
-     (cl:sqrt re)
-     (cl:* 5d-1 (cl:/ (cl:sqrt re)) im))))
-
-;;;; Exponent and logarithm
-
-;; exp
-(declare-inline-math exp (ext-number) dual)
-(defun exp (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:* (cl:exp re))
-     (cl:* (cl:exp re) im))))
-
-;; log
-(declare-inline-math log (ext-number) dual)
-(defun log (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (declare (type (double-float 0d0) re))
-    (simd:make-f64.2
-     (cl:log re)
-     (cl:/ im re))))
-
-;;;; Trigonometric
-
-;; sin
-(declare-inline-math sin (ext-number) dual)
-(defun sin (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:* (cl:sin re))
-     (cl:* (cl:cos re) im))))
-
-;; cos
-(declare-inline-math cos (ext-number) dual)
-(defun cos (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:* (cl:+ (cl:cos re)))
-     (cl:* (cl:- (cl:sin re)) im))))
-
-;; tan
-(declare-inline-math tan (ext-number) dual)
-(defun tan (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:tan re)
-     (cl:/ im (cl:expt (cl:cos re) 2)))))
-
-;;;; Hyper-trigonometric
-
-;; sinh
-(declare-inline-math sinh (ext-number) dual)
-(defun sinh (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:* (cl:sinh re))
-     (cl:* (cl:cosh re) im))))
-
-(declare-inline-math cosh (ext-number) dual)
-(defun cosh (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:* (cl:cosh re))
-     (cl:* (cl:sinh re) im))))
-
-(declare-inline-math tanh (ext-number) dual)
-(defun tanh (number)
-  (one-arg-decompose (re im)
-      (promote number)
-    (simd:make-f64.2
-     (cl:tanh re)
-     (cl:/ im (cl:expt (cl:cosh re) 2)))))
+       (declaim (inline ,name))
+       (defun ,name  (number &rest more-numbers)
+         (reduce #',two-arg-fn more-numbers :initial-value number))
+       (define-compiler-macro ,name (number &rest more-numbers)
+         (if (null more-numbers) number
+             (reduce (lambda (acc number)
+                       (list ',two-arg-fn acc number))
+                     more-numbers
+                     :initial-value number))))))
 
 ;; Convenient reader for dual numbers. I hope this will not affect
 ;; anyone's reader macro.

@@ -14,6 +14,8 @@
   :components ((:file "ultralisp-hack" :if-feature (:not :sb-simd))
                (:file "package")
                (:file "dual")
+               (:file "fndb")
+               (:file "functions")
                (:file "autodiff"))
   :depends-on (:serapeum)
   :in-order-to ((test-op (load-op "cl-forward-diff/tests")))

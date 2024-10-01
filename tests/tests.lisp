@@ -1,14 +1,18 @@
 (in-package :cl-forward-diff-tests)
 
 (def-suite diff :description "Check differentiation")
+(def-suite comp :description "Evaluates into the same")
 
 (defun run-tests ()
-  (let ((status (run 'diff)))
-    (explain! status)
-    (results-status status)))
+  (every #'identity
+         (mapcar (lambda (suite)
+                   (let ((status (run suite)))
+                     (explain! status)
+                     (results-status status)))
+                 '(diff comp))))
 
-(defun ≈ (x y)
-  (< (cl:abs (cl:- x y)) 1d-6))
+(defun ≈ (x y &optional (diff 1d-6))
+  (< (cl:abs (cl:- x y)) diff))
 
 (in-suite diff)
 
@@ -91,3 +95,43 @@
   (is-true (every #'≈
                   (ad-multivariate #'multivar (to-doubles '(2 3)))
                   '(-0.50505435d0 0.09980452d0))))
+
+(in-suite comp)
+
+;; Some very long function
+(declaim (inline foobar))
+(defun foobar (x y z)
+  (*
+   (expt
+    (+ (+ x) (- y) (+ x y) (/ z) (/ z y) (/ z y x)
+       (* x) (* x y) (* x y z))
+    z)
+  (+ (sin x) (cos y) (tan z)
+     (sinh x) (cosh y) (tanh z))
+  (/ (log y) x)
+  (signum (* (abs x) y))))
+
+(serapeum:-> foobar-1 (dual dual single-float)
+             (values dual &optional))
+(defun foobar-1 (x y z)
+  (declare (optimize (speed 3)))
+  (foobar x y z))
+
+(serapeum:-> foobar-2 (single-float single-float single-float)
+             (values single-float &optional))
+(defun foobar-2 (x y z)
+  (declare (optimize (speed 3)))
+  (foobar x y z))
+
+(test specialization
+  (let ((v1 (foobar 3.0 4.0 2.0))
+        (v2 (foobar 3d0 4d0 2d0))
+        (v3 (foobar 3d0 4d0 2d0))
+        (v4 (foobar-1 #d(3d0 1d0)
+                      #d(4d0 2d0)
+                      2.0))
+        (v5 (foobar-2 3.0 4.0 2.0)))
+    (is-true (≈ v1 v2 1d-2))
+    (is-true (≈ v1 v3 1d-2))
+    (is-true (≈ v1 (dual-realpart v4) 1d-2))
+    (is-true (≈ v1 v5 1d-2))))
