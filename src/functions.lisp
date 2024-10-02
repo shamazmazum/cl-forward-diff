@@ -21,9 +21,21 @@
 (define-two-arg-fn two-arg-* dual-dual-* cl:*)
 (define-arith-0 * two-arg-* 1)
 
+;; Negation
+(declaim (inline dual-negate))
+(sera:-> dual-negate (dual)
+         (values dual &optional))
+(defun dual-negate (x)
+  (simd:f64.2-xor
+   (make-dual -0d0 -0d0) x))
+
+(define-one-arg-fn negate dual-negate cl:-)
+(sb-c:defoptimizer (negate sb-c:derive-type) ((x))
+  (rational-derive-type x))
+
 ;; -
 (define-two-arg-fn two-arg-- simd:f64.2- cl:-)
-(%define-arith-1 - two-arg-- 0)
+(define-arith-1 - two-arg-- negate)
 
 ;; /
 (declaim (inline dual-dual-/))

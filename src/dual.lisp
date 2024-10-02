@@ -148,6 +148,23 @@
             more-numbers
             :initial-value number)))))
 
+(defmacro define-arith-1 (name two-arg-fn invert)
+  "Define arithmetic functions with signature (NUMBER &REST MORE-NUMBERS)."
+  `(progn
+     (declaim (inline ,name))
+     (sera:-> ,name (ext-number &rest ext-number) (values ext-number &optional))
+     (defun ,name (number &rest more-numbers)
+       (if more-numbers
+           (reduce #',two-arg-fn more-numbers :initial-value number)
+           (,invert number)))
+     (define-compiler-macro ,name (number &rest more-numbers)
+       (if (null more-numbers)
+           (list ',invert number)
+           (reduce
+            (lambda (acc x) (list ',two-arg-fn acc x))
+            more-numbers
+            :initial-value number)))))
+
 (defmacro define-min-max (name op cl-fn)
   "Define MIN or MAX. This is a special case."
   (let ((dual-dual-fn (intern (format nil "DUAL-DUAL-~a" name)))

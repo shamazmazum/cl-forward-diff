@@ -24,6 +24,12 @@
     (ext-number) ext-irrat
     (sb-c:movable sb-c:foldable sb-c:flushable))
 
+;; Negation is pure and rational (in the sense that the result is
+;; rational if the argument is rational).
+(sb-c:defknown (negate)
+    (ext-number) ext-number
+    (sb-c:movable sb-c:foldable sb-c:flushable))
+
 ;; Some functions with restricted domain
 (sb-c:defknown (sin cos tanh)
     (ext-number) (or dual (float -1.0 1.0))
