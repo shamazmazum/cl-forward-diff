@@ -202,6 +202,28 @@
               (sb-kernel:type-union
                dual (make-float-type))))))))
 
+;; Type derivation helper for rational functions.
+(defun rational-derive-type (arg &optional low high)
+  (let ((dual (sb-kernel:specifier-type 'dual))
+        (real (sb-kernel:specifier-type 'real))
+        (type (sb-c::lvar-type arg)))
+    (when (sb-kernel:csubtypep type (sb-kernel:type-union dual real))
+      ;; REAL-PART = ARG-TYPE \ DUAL, i.e. what we know about the
+      ;; real part of the union.
+      (let ((real-part (sb-kernel:type-intersection type real)))
+        (if (sb-kernel:numeric-type-p real-part)
+            ;; REAL-PART can be expressed by NUMERIC-TYPE, e.g. it
+            ;; is a subtype of INTEGER or DOUBLE-FLOAT.
+            (sb-kernel:type-union
+             dual (sb-kernel:make-numeric-type
+                   :class  (sb-kernel:numeric-type-class  real-part)
+                   :format (sb-kernel:numeric-type-format real-part)
+                   :low    low
+                   :high   high))
+            ;; REAL-PART is a subtype of REAL which cannot be
+            ;; expressed by the means of NUMERIC-TYPE.
+            type)))))
+
 ;; Convenient reader for dual numbers. I hope this will not affect
 ;; anyone's reader macro.
 (defun read-dual (stream subchar arg)

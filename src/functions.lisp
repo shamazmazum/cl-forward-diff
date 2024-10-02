@@ -101,6 +101,8 @@
      (cl:* (cl:signum re) im))))
 
 (define-one-arg-fn abs dual-abs cl:abs)
+(sb-c:defoptimizer (abs sb-c:derive-type) ((x))
+  (rational-derive-type x 0))
 
 ;; signum
 (declaim (inline dual-signum))
