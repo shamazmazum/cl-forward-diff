@@ -118,39 +118,33 @@
                     (list ',two-arg-fn acc number))
                   numbers))))))
 
-(defmacro %define-arith-1 (name two-arg-fn identity)
+(defmacro define-arith-1 (name two-arg-fn &key invert identity)
   "Define arithmetic functions with signature (NUMBER &REST MORE-NUMBERS)."
-  `(progn
-     (declaim (inline ,name))
-     (sera:-> ,name (ext-number &rest ext-number) (values ext-number &optional))
-     (defun ,name (number &rest more-numbers)
-       (if more-numbers
-           (reduce #',two-arg-fn more-numbers :initial-value number)
-           (,two-arg-fn ,identity number)))
-     (define-compiler-macro ,name (number &rest more-numbers)
-       (if (null more-numbers)
-           (list ',two-arg-fn ,identity number)
-           (reduce
-            (lambda (acc x) (list ',two-arg-fn acc x))
-            more-numbers
-            :initial-value number)))))
-
-(defmacro define-arith-1 (name two-arg-fn invert)
-  "Define arithmetic functions with signature (NUMBER &REST MORE-NUMBERS)."
-  `(progn
-     (declaim (inline ,name))
-     (sera:-> ,name (ext-number &rest ext-number) (values ext-number &optional))
-     (defun ,name (number &rest more-numbers)
-       (if more-numbers
-           (reduce #',two-arg-fn more-numbers :initial-value number)
-           (,invert number)))
-     (define-compiler-macro ,name (number &rest more-numbers)
-       (if (null more-numbers)
-           (list ',invert number)
-           (reduce
-            (lambda (acc x) (list ',two-arg-fn acc x))
-            more-numbers
-            :initial-value number)))))
+  (assert
+   (or (and invert (not identity))
+       (and identity (not invert))))
+  (let ((invert-form-1
+         (if invert
+             `(,invert number)
+             `(,two-arg-fn ,identity number)))
+        (invert-form-2
+         (if invert
+             `(list ',invert number)
+             `(list ',two-arg-fn ,identity number))))
+    `(progn
+       (declaim (inline ,name))
+       (sera:-> ,name (ext-number &rest ext-number) (values ext-number &optional))
+       (defun ,name (number &rest more-numbers)
+         (if more-numbers
+             (reduce #',two-arg-fn more-numbers :initial-value number)
+             ,invert-form-1))
+       (define-compiler-macro ,name (number &rest more-numbers)
+         (if (null more-numbers)
+             ,invert-form-2
+             (reduce
+              (lambda (acc x) (list ',two-arg-fn acc x))
+              more-numbers
+              :initial-value number))))))
 
 (defmacro define-min-max (name op cl-fn)
   "Define MIN or MAX. This is a special case."

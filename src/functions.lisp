@@ -39,7 +39,7 @@
 
 ;; -
 (define-two-arg-fn two-arg-- simd:f64.2- cl:-)
-(define-arith-1 - two-arg-- negate)
+(define-arith-1 - two-arg-- :invert negate)
 (sb-c:defoptimizer (two-arg-- sb-c:derive-type) ((x y))
   (arith-derive-type x y))
 
@@ -59,7 +59,7 @@
       (cl:expt y-re 2)))))
 
 (define-two-arg-fn two-arg-/ dual-dual-/ cl:/)
-(%define-arith-1 / two-arg-/ 1)
+(define-arith-1 / two-arg-/ :identity 1)
 (sb-c:defoptimizer (two-arg-/ sb-c:derive-type) ((x y))
   (arith-derive-type x y :rational t))
 
