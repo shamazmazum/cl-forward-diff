@@ -23,7 +23,7 @@
 
 ;; -
 (define-two-arg-fn two-arg-- simd:f64.2- cl:-)
-(define-arith-1 - two-arg-- 0)
+(%define-arith-1 - two-arg-- 0)
 
 ;; /
 (declaim (inline dual-dual-/))
@@ -41,7 +41,7 @@
       (cl:expt y-re 2)))))
 
 (define-two-arg-fn two-arg-/ dual-dual-/ cl:/)
-(define-arith-1 / two-arg-/ 1)
+(%define-arith-1 / two-arg-/ 1)
 
 ;; 1+ / 1-
 ;; I guess I just inline these

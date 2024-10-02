@@ -131,7 +131,7 @@
                     (list ',two-arg-fn acc number))
                   numbers))))))
 
-(defmacro define-arith-1 (name two-arg-fn identity)
+(defmacro %define-arith-1 (name two-arg-fn identity)
   "Define arithmetic functions with signature (NUMBER &REST MORE-NUMBERS)."
   `(progn
      (declaim (inline ,name))
