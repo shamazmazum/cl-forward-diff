@@ -117,9 +117,10 @@
          (values dual &optional))
 (defun dual-expt (base power)
   (decompose-dual (re im) base
-    (make-dual
-     (cl:* (real-expt re power))
-     (cl:* (real-expt re (cl:1- power)) power im))))
+    (let ((expt (real-expt re (cl:1- power))))
+      (make-dual
+       (cl:* expt re)
+       (cl:* expt power im)))))
 
 (defun expt (base power)
   (declare (sb-int:explicit-check))
