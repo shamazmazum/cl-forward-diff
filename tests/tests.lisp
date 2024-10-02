@@ -1,7 +1,8 @@
 (in-package :cl-forward-diff-tests)
 
-(def-suite diff :description "Check differentiation")
-(def-suite comp :description "Evaluates into the same")
+(def-suite diff  :description "Check differentiation")
+(def-suite eval  :description "Evaluates into the same")
+(def-suite types :description "Check type checking")
 
 (defun run-tests ()
   (every #'identity
@@ -9,7 +10,7 @@
                    (let ((status (run suite)))
                      (explain! status)
                      (results-status status)))
-                 '(diff comp))))
+                 '(diff eval types))))
 
 (defun ≈ (x y &optional (diff 1d-6))
   (< (cl:abs (cl:- x y)) diff))
@@ -96,7 +97,7 @@
                   (ad-multivariate #'multivar (to-doubles '(2 3)))
                   '(-0.50505435d0 0.09980452d0))))
 
-(in-suite comp)
+(in-suite eval)
 
 ;; Some very long function
 (declaim (inline foobar))
@@ -135,3 +136,98 @@
     (is-true (≈ v1 v3 1d-2))
     (is-true (≈ v1 (dual-realpart v4) 1d-2))
     (is-true (≈ v1 v5 1d-2))))
+
+(in-suite types)
+
+(defun %evaluates-with-type-warnings (forms)
+  (let (warnings-signaled-p)
+    (handler-bind
+        ((sb-int:type-warning
+          (lambda (c)
+            (setq warnings-signaled-p t)
+            (muffle-warning c))))
+      (eval forms))
+    warnings-signaled-p))
+
+(defmacro evaluates-with-type-warnings (&body body)
+  `(%evaluates-with-type-warnings
+    '(progn ,@body)))
+
+(test arith-dual-result-1
+  ;; If one of the arguments is dual, the result must be dual
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad (t dual) (values real &optional))
+     (defun bad (x y)
+       (+ x (expt x 2) y))))
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good (t dual) (values dual &optional))
+     (defun good (x y)
+       (+ x (expt x 2) y))))
+  (fmakunbound 'bad)
+  (fmakunbound 'good))
+
+(test arith-dual-result-2
+  ;; If one of the arguments is dual, the result must be dual
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad (t dual) (values real &optional))
+     (defun bad (x y)
+       (+ x (* x y)))))
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good (t dual) (values dual &optional))
+     (defun good (x y)
+       (+ x (* x y)))))
+  (fmakunbound 'bad)
+  (fmakunbound 'good))
+
+(test irrational
+  ;; If the argument is INTEGER, the result must be SINGLE-FLOAT
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad ((or dual integer)) (values double-float &optional))
+     (defun bad (x)
+       (+ (sin x) (cos x) (log x)))))
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good ((or dual integer)) (values single-float &optional))
+     (defun good (x)
+       (+ (sin x) (cos x) (log x)))))
+  (fmakunbound 'bad)
+  (fmakunbound 'good))
+
+(test rational
+  ;; If the argument is INTEGER, the result must be INTEGER
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad ((or dual integer)) (values single-float &optional))
+     (defun bad (x)
+       (abs x))))
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good ((or dual integer)) (values integer &optional))
+     (defun good (x)
+       (abs x))))
+  (fmakunbound 'bad)
+  (fmakunbound 'good))
+
+(test contagion
+  ;; FIXNUM + DOUBLE-FLOAT = DOUBLE-FLOAT
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad ((or dual integer)
+              (or dual double-float))
+         (values single-float &optional))
+     (defun bad (x y)
+       (+ x y (* x y)))))
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good ((or dual integer)
+               (or dual double-float))
+         (values double-float &optional))
+     (defun good (x y)
+       (+ x y (* x y)))))
+  (fmakunbound 'bad)
+  (fmakunbound 'good))

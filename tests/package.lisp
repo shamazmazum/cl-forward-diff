@@ -1,5 +1,6 @@
 (defpackage cl-forward-diff-tests
   (:use #:cl #:fiveam #:alexandria)
+  (:import-from #:serapeum #:->)
   (:import-from
    #:cl-forward-diff
    #:dual #:dual-realpart
