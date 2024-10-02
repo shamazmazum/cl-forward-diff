@@ -2,6 +2,7 @@
 
 (deftype dual () '(sb-ext:simd-pack double-float))
 (deftype ext-number () '(or dual real))
+(deftype ext-irrat  () '(or dual float))
 
 (define-condition complex-result (error)
   ()
