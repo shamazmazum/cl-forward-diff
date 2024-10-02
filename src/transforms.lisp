@@ -12,10 +12,6 @@
   '(simd:f64.2+ (promote-to-dual x) y))
 
 ;; *
-(sb-c:deftransform two-arg-*
-    ((x y) (dual (sb-int:constant-arg (member 2 2.0 2d0))) cl:*)
-  '(+ x x))
-
 ;; Special cases (DUAL * REAL and REAL * DUAL).
 ;; We can save some computations
 (sb-c:deftransform two-arg-* ((x y) (dual real) cl:*)
@@ -23,6 +19,10 @@
 
 (sb-c:deftransform two-arg-* ((x y) (real dual) cl:*)
   '(simd:f64.2* (fill-dual-vector x) y))
+
+(sb-c:deftransform two-arg-*
+    ((x y) (dual (sb-int:constant-arg (member 2 2.0 2d0))) cl:*)
+  '(+ x x))
 
 ;; -
 ;; FIXME: Same question as for +
