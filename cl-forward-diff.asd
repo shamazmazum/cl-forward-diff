@@ -16,6 +16,7 @@
                (:file "dual")
                (:file "fndb")
                (:file "functions")
+               (:file "transforms")
                (:file "autodiff"))
   :depends-on (:serapeum)
   :in-order-to ((test-op (load-op "cl-forward-diff/tests")))

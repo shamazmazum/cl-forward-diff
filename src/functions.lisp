@@ -5,14 +5,6 @@
 (define-two-arg-fn two-arg-+ simd:f64.2+ cl:+)
 (define-arith-0 + two-arg-+ 0)
 
-;; Special cases (DUAL + REAL and REAL + DUAL)
-;; FIXME: Are they really special?
-(sb-c:deftransform two-arg-+ ((x y) (dual real) cl:*)
-  '(simd:f64.2+ x (promote-to-dual y)))
-
-(sb-c:deftransform two-arg-+ ((x y) (real dual) cl:*)
-  '(simd:f64.2+ (promote-to-dual x) y))
-
 ;; *
 (declaim (inline dual-dual-*))
 (sera:-> dual-dual-* (dual dual)
@@ -29,27 +21,9 @@
 (define-two-arg-fn two-arg-* dual-dual-* cl:*)
 (define-arith-0 * two-arg-* 1)
 
-(sb-c:deftransform two-arg-*
-    ((x y) (dual (sb-int:constant-arg (member 2 2.0 2d0))) cl:*)
-  '(+ x x))
-
-;; Special cases (DUAL * REAL and REAL * DUAL).
-;; We can save some computations
-(sb-c:deftransform two-arg-* ((x y) (dual real) cl:*)
-  '(simd:f64.2* x (fill-dual-vector y)))
-
-(sb-c:deftransform two-arg-* ((x y) (real dual) cl:*)
-  '(simd:f64.2* (fill-dual-vector x) y))
-
 ;; -
 (define-two-arg-fn two-arg-- simd:f64.2- cl:-)
 (define-arith-1 - two-arg-- 0)
-
-(sb-c:deftransform two-arg-- ((x y) (dual real) cl:*)
-  '(simd:f64.2- x (promote-to-dual y)))
-
-(sb-c:deftransform two-arg-- ((x y) (real dual) cl:*)
-  '(simd:f64.2- (promote-to-dual x) y))
 
 ;; /
 (declaim (inline dual-dual-/))
@@ -68,14 +42,6 @@
 
 (define-two-arg-fn two-arg-/ dual-dual-/ cl:/)
 (define-arith-1 / two-arg-/ 1)
-
-;; We can save some computations, as with * for DUAL / REAL
-(sb-c:deftransform two-arg-/ ((x y) (dual real) cl:*)
-  '(simd:f64.2/ x (fill-dual-vector y)))
-
-;; To avoid calling of TWO-ARG-/
-(sb-c:deftransform two-arg-/ ((x y) (real dual) cl:*)
-  '(* x (expt y -1)))
 
 ;; 1+ / 1-
 ;; I guess I just inline these
@@ -141,12 +107,6 @@
   (etypecase base
     (dual (dual-expt base power))
     (real (real-expt base power))))
-
-(sb-c:deftransform expt ((base power) (dual real) cl:*)
-  '(dual-expt base power))
-
-(sb-c:deftransform expt ((base power) (real real) cl:*)
-  '(real-expt base power))
 
 ;; sqrt
 (declaim (inline dual-sqrt))
