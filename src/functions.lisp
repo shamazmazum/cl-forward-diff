@@ -4,6 +4,8 @@
 ;; +
 (define-two-arg-fn two-arg-+ simd:f64.2+ cl:+)
 (define-arith-0 + two-arg-+ 0)
+(sb-c:defoptimizer (two-arg-+ sb-c:derive-type) ((x y))
+  (arith-derive-type x y))
 
 ;; *
 (declaim (inline dual-dual-*))
@@ -20,6 +22,8 @@
 
 (define-two-arg-fn two-arg-* dual-dual-* cl:*)
 (define-arith-0 * two-arg-* 1)
+(sb-c:defoptimizer (two-arg-* sb-c:derive-type) ((x y))
+  (arith-derive-type x y))
 
 ;; Negation
 (declaim (inline dual-negate))
@@ -36,6 +40,8 @@
 ;; -
 (define-two-arg-fn two-arg-- simd:f64.2- cl:-)
 (define-arith-1 - two-arg-- negate)
+(sb-c:defoptimizer (two-arg-- sb-c:derive-type) ((x y))
+  (arith-derive-type x y))
 
 ;; /
 (declaim (inline dual-dual-/))
@@ -54,6 +60,8 @@
 
 (define-two-arg-fn two-arg-/ dual-dual-/ cl:/)
 (%define-arith-1 / two-arg-/ 1)
+(sb-c:defoptimizer (two-arg-/ sb-c:derive-type) ((x y))
+  (arith-derive-type x y :rational t))
 
 ;; 1+ / 1-
 ;; I guess I just inline these

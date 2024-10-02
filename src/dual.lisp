@@ -95,19 +95,6 @@
             (dual (,dual-fn (promote-to-dual x) y))
             (real (,real-fn x y))))))
 
-     (sb-c:defoptimizer (,name sb-c:derive-type) ((x y))
-       (let ((dual (sb-kernel:specifier-type 'dual))
-             (real (sb-kernel:specifier-type 'real))
-             (x-type (sb-c::lvar-type x))
-             (y-type (sb-c::lvar-type y)))
-         (cond
-           ((and (sb-kernel:csubtypep x-type real)
-                 (sb-kernel:csubtypep y-type real))
-            (sb-kernel:numeric-contagion x y))
-           ((or (sb-kernel:csubtypep x-type dual)
-                (sb-kernel:csubtypep y-type dual))
-            dual))))
-
      (sb-c:deftransform ,name ((x y) (dual dual) cl:*)
        '(,dual-fn x y))
 
@@ -240,6 +227,29 @@
             ;; REAL-PART is a subtype of REAL which cannot be
             ;; expressed by the means of NUMERIC-TYPE.
             type)))))
+
+;; Type derivation for binary arithmetic functions
+(defun arith-derive-type (x y &key (rational nil))
+  (let* ((dual (sb-kernel:specifier-type 'dual))
+         (real (sb-kernel:specifier-type 'real))
+         (ext  (sb-kernel:type-union dual real))
+         (x-type (sb-c::lvar-type x))
+         (y-type (sb-c::lvar-type y)))
+    (when (and (sb-kernel:csubtypep x-type ext)
+               (sb-kernel:csubtypep y-type ext))
+      (if (or (sb-kernel:type= x-type dual)
+              (sb-kernel:type= y-type dual))
+          ;; If one of arguments is surely of type DUAL, then result is DUAL.
+          dual
+          ;; Nothing is known for sure except the args are
+          ;; EXT-NUMBERs. The result must be of type DUAL ∪ CONTAGION(X
+          ;; ∩ REAL, Y ∩ REAL). NUMERIC-CONTAGION is not the best thing
+          ;; to use here, but it's more of less suitable.
+          (let ((x-real (sb-kernel:type-intersection x-type real))
+                (y-real (sb-kernel:type-intersection y-type real)))
+            (sb-kernel:type-union
+             (sb-kernel:numeric-contagion x-real y-real :rational rational)
+             dual))))))
 
 ;; Convenient reader for dual numbers. I hope this will not affect
 ;; anyone's reader macro.
