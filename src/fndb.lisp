@@ -26,7 +26,7 @@
 
 ;; Negation is pure and rational (in the sense that the result is
 ;; rational if the argument is rational).
-(sb-c:defknown (negate)
+(sb-c:defknown negate
     (ext-number) ext-number
     (sb-c:movable sb-c:foldable sb-c:flushable))
 
