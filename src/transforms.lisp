@@ -37,9 +37,10 @@
 (sb-c:deftransform two-arg-/ ((x y) (dual real) cl:*)
   '(simd:f64.2/ x (fill-dual-vector y)))
 
-;; To avoid calling of TWO-ARG-/
+;; Transform to a full DUAL-DUAL operation to avoid calling of
+;; TWO-ARG-/.
 (sb-c:deftransform two-arg-/ ((x y) (real dual) cl:*)
-  '(* x (expt y -1)))
+  '(dual-dual-/ (make-dual (float x 0d0)) y))
 
 ;; expt
 (sb-c:deftransform expt ((base power) (dual real) cl:*)
