@@ -1,5 +1,10 @@
 # Changelog
 
+## New in version 0.4
+
+* Do not arguments to `dual` if it is not required. You can now call these
+  functions with `real` values and get `real`.
+
 ## New in version 0.3
 
 * `ad-multivariate` now accepts a simple one-dimensional array of doubles as its
