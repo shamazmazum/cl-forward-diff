@@ -50,5 +50,5 @@
 
 ;; Can signal an error
 (sb-c:defknown expt
-    ((or dual (real 0)) real) ext-number
+    (ext-number real) ext-number
     (sb-c:movable sb-c:foldable sb-c:unsafely-flushable))
