@@ -245,6 +245,24 @@
              (sb-kernel:numeric-contagion x-real y-real :rational rational)
              dual))))))
 
+;; Type derivation for EXPT
+(defun expt-derive-type (base power)
+  (let* ((dual (sb-kernel:specifier-type 'dual))
+         (real (sb-kernel:specifier-type 'real))
+         (ext  (sb-kernel:type-union dual real))
+         (base-type  (sb-c::lvar-type base))
+         (power-type (sb-c::lvar-type power)))
+    (when (and (sb-kernel:csubtypep base-type  ext)
+               (sb-kernel:csubtypep power-type real))
+      (if (sb-kernel:type= base-type dual)
+          ;; If the base is DUAL, then result is DUAL.
+          dual
+          ;; The base is DUAL ∪ REAL
+          (let ((base-real (sb-kernel:type-intersection base-type real)))
+            (sb-kernel:type-union
+             (sb-kernel:numeric-contagion base-real power-type :rational nil)
+             dual))))))
+
 ;; Convenient reader for dual numbers. I hope this will not affect
 ;; anyone's reader macro.
 (defun read-dual (stream subchar arg)

@@ -160,12 +160,21 @@
      (-> bad (t dual) (values real &optional))
      (defun bad (x y)
        (+ x (expt x 2) y))))
+  (fmakunbound 'bad)
+
+  ;; None of the results are dual =>the result is not DUAL
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad (integer real) (values dual &optional))
+     (defun bad (x y)
+       (+ x (expt x 2) y))))
+  (fmakunbound 'bad)
+
   (is-false
    (evaluates-with-type-warnings
      (-> good (t dual) (values dual &optional))
      (defun good (x y)
        (+ x (expt x 2) y))))
-  (fmakunbound 'bad)
   (fmakunbound 'good))
 
 (test arith-dual-result-2
@@ -210,6 +219,21 @@
      (-> good ((or dual integer)) (values integer &optional))
      (defun good (x)
        (abs x))))
+  (fmakunbound 'bad)
+  (fmakunbound 'good))
+
+(test expt
+  ;; If the argument is INTEGER, the result must be INTEGER
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad ((or dual integer) integer) (values single-float &optional))
+     (defun bad (x y)
+       (expt x y))))
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good ((or dual integer) integer) (values integer &optional))
+     (defun good (x y)
+       (expt x y))))
   (fmakunbound 'bad)
   (fmakunbound 'good))
 

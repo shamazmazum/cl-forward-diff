@@ -129,6 +129,9 @@
     (dual (dual-expt base power))
     (real (real-expt base power))))
 
+(sb-c:defoptimizer (expt sb-c:derive-type) ((base power))
+  (expt-derive-type base power))
+
 ;; sqrt
 (declaim (inline dual-sqrt))
 (sera:-> dual-sqrt (dual)
