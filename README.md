@@ -205,7 +205,6 @@ you will get:
 ; 
 ; compilation unit finished
 ;   caught 1 WARNING condition
-WARNING: redefining TEST::BAD-FN in DEFUN
 ```
 
 If the compiler known that the arguments are either strictly dual or strictly
