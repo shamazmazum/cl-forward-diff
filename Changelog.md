@@ -1,5 +1,11 @@
 # Changelog
 
+## New in version 0.5
+
+* `DEFGENERIC` macro with additional type checks for too generic functions. This
+  is not related to CLOS. Here "generic" means that a function works with values
+  of type `(OR DUAL TYPE)`, where `TYPE` is a non-empty subtype of `REAL`.
+
 ## New in version 0.4
 
 * Do not arguments to `dual` if it is not required. You can now call these

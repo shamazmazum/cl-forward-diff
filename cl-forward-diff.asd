@@ -5,7 +5,7 @@
 
 (defsystem :cl-forward-diff
   :name :cl-forward-diff
-  :version "0.4"
+  :version "0.5"
   :author "Vasily Postnicov <shamaz.mazum@gmail.com>"
   :description "Automatic differentiation system (forward mode)"
   :licence "2-clause BSD"
@@ -27,7 +27,7 @@
 
 (defsystem :cl-forward-diff/tests
   :name :cl-forward-diff/tests
-  :version "0.4"
+  :version "0.5"
   :author "Vasily Postnicov <shamaz.mazum@gmail.com>"
   :licence "2-clause BSD"
   :pathname "tests"

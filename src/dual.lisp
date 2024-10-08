@@ -295,7 +295,7 @@
            'string
            "Function ~a is defined with DEFGENERIC but is too specialized.~%"
            "If a function defined with DEFGENERIC returns a value which type intersects~%"
-           "with DUAL, it must be greater than DUAL.~%~%"
+           "with (OR REAL DUAL), it must intersect with both REAL and DUAL.~%~%"
            "Derived type: ~a~%~%"
            "Possible fixes: 1) Check the function type. 2) Define it with DEFUN.")
         :format-arguments (list name ftype)))
