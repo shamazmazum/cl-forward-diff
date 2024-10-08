@@ -7,7 +7,8 @@
    #:abs #:signum #:expt #:sqrt
    #:sin #:cos #:tan
    #:sinh #:cosh #:tanh
-   #:exp #:log #:min #:max)
+   #:exp #:log #:min #:max
+   #:defgeneric)
   (:export
    ;; Conditions
    #:complex-result
@@ -31,4 +32,5 @@
    ;; Differentiation helpers
    #:ad-univariate #:ad-multivariate #:to-doubles
    ;; Helpers
-   #:shadowing-import-math))
+   #:shadowing-import-math
+   #:defgeneric))

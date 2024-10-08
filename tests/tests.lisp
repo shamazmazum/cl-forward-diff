@@ -255,3 +255,32 @@
        (+ x y (* x y)))))
   (fmakunbound 'bad)
   (fmakunbound 'good))
+
+(test generic-type-check
+  (is-true
+   (evaluates-with-type-warnings
+    (-> bad ((or dual integer)) (values (or dual single-float) &optional))
+    (defgeneric bad (x)
+      (* x 3))))
+  (fmakunbound 'bad)
+
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad ((or dual integer)) (values integer &optional))
+     (defgeneric bad (x)
+       (* x 3))))
+  (fmakunbound 'bad)
+
+  (is-true
+   (evaluates-with-type-warnings
+     (-> bad ((or dual integer)) (values dual &optional))
+     (defgeneric bad (x)
+       (* x 3))))
+  (fmakunbound 'bad)
+
+  (is-false
+   (evaluates-with-type-warnings
+     (-> good ((or dual integer)) (values (or dual integer) &optional))
+     (defgeneric good (x)
+       (* x 3))))
+  (fmakunbound 'good))

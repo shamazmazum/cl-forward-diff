@@ -263,6 +263,95 @@
              (sb-kernel:numeric-contagion base-real power-type :rational nil)
              dual))))))
 
+;; DEFGENERIC and compile-time type checking
+
+;; FIXME: Is there SBCL counterpart for it?
+(defun types-intersect-p (t1 t2)
+  (not (eq (sb-kernel:type-intersection t1 t2)
+           sb-kernel:*empty-type*)))
+
+(defun ret-type-wide-enough-p (ftype)
+  (let* ((dual (sb-kernel:specifier-type 'dual))
+         (real (sb-kernel:specifier-type 'real))
+         (ext  (sb-kernel:type-union dual real))
+         (rtype (sb-kernel:fun-type-returns ftype)))
+    (if (sb-kernel:values-type-p rtype)
+        ;; Check that return type is always
+        ;; 1) some union of DUAL and a non-null subtype of REAL.
+        ;; 2) does not intersect (OR DUAL REAL) at all.
+        (every (lambda (type)
+                 (or
+                  (and (types-intersect-p type dual)
+                       (types-intersect-p type real))
+                  (not (types-intersect-p type ext))))
+               (sb-kernel:values-type-types rtype))
+        ;; FIXME: If not a VALUES-TYPE, what else? NIL? Just return t if not sure
+        t)))
+
+(defun report-narrow-type (name ftype)
+  (warn 'sb-int:type-warning
+        :format-control
+        #.(concatenate
+           'string
+           "Function ~a is defined with DEFGENERIC but is too specialized.~%"
+           "If a function defined with DEFGENERIC returns a value which type intersects~%"
+           "with DUAL, it must be greater than DUAL.~%~%"
+           "Derived type: ~a~%~%"
+           "Possible fixes: 1) Check the function type. 2) Define it with DEFUN.")
+        :format-arguments (list name ftype)))
+
+(defmacro defgeneric (name lambda-list &body body)
+  "Define a differentiable function. This macro is identical to DEFUN
+with exception of stronger type checking, refusing to compile some
+valid Common Lisp.
+
+Namely, if you write the following code:
+
+(serapeum:-> foo ((or dual fixnum)) (values (or dual single-float) &optional))
+(defun foo (x)
+  (1+ x))
+
+it seems to be perfectly valid in the Common Lisp sense, but still
+somewhat nonsensical. E.g. if you pass FIXNUM value to that function,
+you will get a FIXNUM, not a SINGLE-FLOAT. This macro checks the
+derived result type and if it intersects with (OR REAL DUAL), it
+ensures that it is strictly greater than both REAL and DUAL, so union
+types can be safely used in type declarations. In the above case it
+signals a compile-time waring of type SB-INT:TYPE-WARNING:
+
+~~~
+Function AAA is defined with DEFGENERIC but is too specialized.
+If a function defined with DEFGENERIC returns a value which type intersects
+with DUAL, it must be greater than DUAL.
+
+Derived type: #<FUN-TYPE (FUNCTION
+                          ((OR (SIMD-PACK DOUBLE-FLOAT) FIXNUM))
+                          (VALUES (SIMD-PACK DOUBLE-FLOAT)
+                                  &OPTIONAL))>
+
+Possible fixes: 1) Check the function type. 2) Define it with DEFUN.
+~~~
+
+Changing the function type to
+
+(serapeum:-> ((or dual fixnum)) (values (or dual fixnum) &optional))
+
+fixes the error."
+  (let ((ftype (gensym)))
+    `(progn
+       (defun ,name ,lambda-list ,@body)
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+         (let ((,ftype (sb-kernel:specifier-type
+                        (sb-impl::%fun-ftype
+                         ;; FIXME: I have tp compile this functions twice, as DEFUN
+                         ;; already expands to NAMED-LAMBDA, but I need type checking to
+                         ;; work at compile time, not load time. Fortunately, it seems to
+                         ;; produce no side-effects with possible exception of signalling.
+                         (sb-int:named-lambda ,name ,lambda-list
+                           (block ,name ,@body))))))
+           (unless (ret-type-wide-enough-p ,ftype)
+             (report-narrow-type ',name ,ftype)))))))
+
 ;; Convenient reader for dual numbers. I hope this will not affect
 ;; anyone's reader macro.
 (defun read-dual (stream subchar arg)
@@ -277,3 +366,14 @@
                subchar list))))
 
 (set-dispatch-macro-character #\# #\D #'read-dual)
+
+;; Helper for shadowing math functions in defpackage
+(defun shadowing-import-math ()
+  '(:shadowing-import-from
+    #:cl-forward-diff
+    #:+ #:- #:* #:/ #:1+ #:1-
+    #:abs #:signum #:expt #:sqrt
+    #:sin #:cos #:tan
+    #:sinh #:cosh #:tanh
+    #:exp #:log
+    #:min #:max #:defgeneric))

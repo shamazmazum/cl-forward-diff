@@ -54,14 +54,3 @@ and returns a DUAL. XS is a simple array of doubles."
   (declare (optimize (speed 3))
            (type differentiable-univariate function))
   (dual-imagpart (funcall function (make-dual (float x 0d0) 1d0))))
-
-;; Helper for shadowing math functions in defpackage
-(defun shadowing-import-math ()
-  '(:shadowing-import-from
-    #:cl-forward-diff
-    #:+ #:- #:* #:/ #:1+ #:1-
-    #:abs #:signum #:expt #:sqrt
-    #:sin #:cos #:tan
-    #:sinh #:cosh #:tanh
-    #:exp #:log
-    #:min #:max))
