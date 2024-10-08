@@ -343,19 +343,17 @@ fixes the error."
        (eval-when (:compile-toplevel :load-toplevel :execute)
          (let ((,ftype (sb-kernel:specifier-type
                         (sb-impl::%fun-ftype
-                         ;; Muffle compilation warnings (they are produced by DEFUN above.
+                         ;; Muffle compilation warnings (they are produced by DEFUN above).
                          ;; Thx to polymorphic-functions
-                         (locally (declare (sb-ext:muffle-conditions warning))
-                           (let ((*error-output* (make-string-output-stream)))
-                             (let ((sb-c::*compilation-unit* nil)
-                                   (*compile-verbose* nil))
-                               ;; FIXME: I have tp compile this functions twice, as DEFUN
-                               ;; already expands to NAMED-LAMBDA, but I need type
-                               ;; checking to work at compile time, not load
-                               ;; time. Fortunately, it seems to produce no side-effects
-                               ;; with possible exception of signalling.
-                               (sb-int:named-lambda ,name ,lambda-list
-                                 (block ,name ,@body)))))))))
+                         (locally
+                             (declare (sb-ext:muffle-conditions warning))
+                           ;; FIXME: I have tp compile this functions twice, as DEFUN
+                           ;; already expands to NAMED-LAMBDA, but I need type
+                           ;; checking to work at compile time, not load
+                           ;; time. Fortunately, it seems to produce no side-effects
+                           ;; with possible exception of signalling.
+                           (sb-int:named-lambda ,name ,lambda-list
+                             (block ,name ,@body)))))))
            (unless (ret-type-wide-enough-p ,ftype)
              (report-narrow-type ',name ,ftype)))))))
 
