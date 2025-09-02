@@ -132,71 +132,6 @@ It's easy. Just compare real part of x in the conditional form.
 
 evaluates to `(3.0d0 1.0d0)`.
 
-## Additional type checking for too generic functions
-
-**NB: This feature is experimental.**
-Consider this perfectly valid code (in the sense of Common Lisp's type system):
-
-``` lisp
-(defpackage foo
-  (:use :cl :cl-forward-diff)
-  #.(cl-forward-diff:shadowing-import-math)
-  (:export :foo))
-(in-package :foo)
-
-(serapeum:-> foo ((or dual fixnum))
-             (values (or dual single-float) &optional))
-(defun foo (x)
-  (1+ x))
-```
-
-However, it's clear that a value of type `SINGLE-FLOAT` cannot be returned from
-`FOO`. The problem is that if you use union types in your declaration, you
-cannot repy on standard rules of type checking anymore.
-
-Hopefully, you can use `CL-FORWARD-DIFF:DEFGENERIC` (not to be confused with
-`CL:DEFGENERIC`) to overcome this obstacle. In the code above, replace `DEFUN`
-with `DEFGENERIC` (it is shadowing-imported from `CL-FORWARD-DIFF`):
-
-``` lisp
-(defgeneric foo (x)
-  (1+ x))
-```
-
-When compiling your code, you will get:
-
-~~~
-WARNING: Function FOO is defined with DEFGENERIC but is too specialized.
-If a function defined with DEFGENERIC returns a value which type intersects
-with (OR REAL DUAL), it must intersect with both REAL and DUAL.
-
-Derived type: #<FUN-TYPE (FUNCTION
-                          ((OR (SB-EXT:SIMD-PACK DOUBLE-FLOAT) FIXNUM))
-                          (VALUES (SB-EXT:SIMD-PACK DOUBLE-FLOAT) &OPTIONAL))>
-
-Possible fixes: 1) Check the function type. 2) Define it with DEFUN.
-See also:
-  The SBCL Manual, Node "Handling of Types"
-~~~
-
-So, as it says, you cannot return just `DUAL` or `REAL` values from generic
-functions, it must be some union of `DUAL` and a non-empty subtype of
-`REAL`. The correct code for the above example is:
-
-``` lisp
-(serapeum:-> foo ((or dual fixnum))
-             (values (or dual fixnum) &optional))
-(defgeneric foo (x)
-  (1+ x))
-```
-
-**Side effects:**  
-Unfortunately, SBCL compiles functions defined with `DEFGENERIC` twice, so other
-warnings (if any) will also be printed twice. Other side effects (like assigning
-a compiled function to a symbol's `FDEFINITION`) are still performed once (in
-load time). If you know how `DEFGENERIC` can be improved, feel free to open an
-issue / pull request.
-
 ## Few implementation details
 
 When the compiler cannot decide if the arguments of your functions are purely
@@ -242,39 +177,10 @@ CL-USER> (disassemble 'test:fn)
 NIL
 ```
 
-In this case SBCL has a limited ability to derive type of your function. E.g. if
-you inline `TEST:FN` and write the following code:
-
-``` lisp
-(sera:-> bad-fn ((or diff:dual fixnum))
-         (values single-float &optional))
-(defun bad-fn (x)
-  (fn x))
-```
-
-you will get:
-
-``` lisp
-; in: DEFUN BAD-FN
-;     (SB-INT:NAMED-LAMBDA TEST::BAD-FN
-;         (TEST::X)
-;       (BLOCK TEST::BAD-FN (TEST:FN TEST::X)))
-; 
-; caught WARNING:
-;   Derived type of ((CL-FORWARD-DIFF::TWO-ARG-+ CL-FORWARD-DIFF::X 1)) is
-;     (VALUES (OR INTEGER (SB-EXT:SIMD-PACK DOUBLE-FLOAT)) &OPTIONAL),
-;   conflicting with the declared function return type
-;     (VALUES SINGLE-FLOAT &OPTIONAL).
-;   See also:
-;     The SBCL Manual, Node "Handling of Types"
-; 
-; compilation unit finished
-;   caught 1 WARNING condition
-```
-
-If the compiler knows that the arguments are either strictly dual or strictly
-real, it will either open-code mathematical functions using SIMD instructions or
-use functions from the `CL` package. For example:
+In this case SBCL has a limited ability to derive type of your function. If the
+compiler knows that the arguments are either strictly dual or strictly real, it
+will either open-code mathematical functions using SIMD instructions or use
+functions from the `CL` package. For example:
 
 ``` lisp
 (sera:-> good-1 (real)

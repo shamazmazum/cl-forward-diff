@@ -4,8 +4,6 @@
 ;; +
 (define-two-arg-fn two-arg-+ simd:f64.2+ cl:+)
 (define-arith-0 + two-arg-+ 0)
-(sb-c:defoptimizer (two-arg-+ sb-c:derive-type) ((x y))
-  (arith-derive-type x y))
 
 ;; *
 (declaim (inline dual-dual-*))
@@ -22,8 +20,6 @@
 
 (define-two-arg-fn two-arg-* dual-dual-* cl:*)
 (define-arith-0 * two-arg-* 1)
-(sb-c:defoptimizer (two-arg-* sb-c:derive-type) ((x y))
-  (arith-derive-type x y))
 
 ;; Negation
 (declaim (inline dual-negate))
@@ -34,14 +30,10 @@
    (make-dual -0d0 -0d0) x))
 
 (define-one-arg-fn negate dual-negate cl:-)
-(sb-c:defoptimizer (negate sb-c:derive-type) ((x))
-  (rational-derive-type x))
 
 ;; -
 (define-two-arg-fn two-arg-- simd:f64.2- cl:-)
 (define-arith-1 - two-arg-- :invert negate)
-(sb-c:defoptimizer (two-arg-- sb-c:derive-type) ((x y))
-  (arith-derive-type x y))
 
 ;; /
 (declaim (inline dual-dual-/))
@@ -60,8 +52,6 @@
 
 (define-two-arg-fn two-arg-/ dual-dual-/ cl:/)
 (define-arith-1 / two-arg-/ :identity 1)
-(sb-c:defoptimizer (two-arg-/ sb-c:derive-type) ((x y))
-  (arith-derive-type x y :rational t))
 
 ;; 1+ / 1-
 ;; I guess I just inline these
@@ -87,8 +77,6 @@
      (cl:* (cl:signum re) im))))
 
 (define-one-arg-fn abs dual-abs cl:abs)
-(sb-c:defoptimizer (abs sb-c:derive-type) ((x))
-  (rational-derive-type x 0))
 
 ;; signum
 (declaim (inline dual-signum))
@@ -129,9 +117,6 @@
     (dual (dual-expt base power))
     (real (real-expt base power))))
 
-(sb-c:defoptimizer (expt sb-c:derive-type) ((base power))
-  (expt-derive-type base power))
-
 ;; sqrt
 (declaim (inline dual-sqrt))
 (sera:-> dual-sqrt (dual)
@@ -145,8 +130,6 @@
        sqrt (cl:* (cl:/ sqrt) 1/2 im)))))
 
 (define-one-arg-fn sqrt dual-sqrt cl:sqrt)
-(sb-c:defoptimizer (sqrt sb-c:derive-type) ((x))
-  (irrat-derive-type x 0))
 
 ;; exp
 (declaim (inline dual-exp))
@@ -158,8 +141,6 @@
       (make-dual exp (cl:* exp im)))))
 
 (define-one-arg-fn exp dual-exp cl:exp)
-(sb-c:defoptimizer (exp sb-c:derive-type) ((x))
-  (irrat-derive-type x 0))
 
 ;; log
 (declaim (inline dual-log))
@@ -174,8 +155,6 @@
      (cl:/ im re))))
 
 (define-one-arg-fn log dual-log cl:log)
-(sb-c:defoptimizer (log sb-c:derive-type) ((x))
-  (irrat-derive-type x))
 
 ;; Trigonometric
 ;; sin
@@ -189,8 +168,6 @@
      (cl:* (cl:cos re) im))))
 
 (define-one-arg-fn sin dual-sin cl:sin)
-(sb-c:defoptimizer (sin sb-c:derive-type) ((x))
-  (irrat-derive-type x -1 1))
 
 ;; cos
 (declaim (inline dual-cos))
@@ -203,8 +180,6 @@
      (cl:* (cl:- (cl:sin re)) im))))
 
 (define-one-arg-fn cos dual-cos cl:cos)
-(sb-c:defoptimizer (cos sb-c:derive-type) ((x))
-  (irrat-derive-type x -1 1))
 
 ;; tan
 (declaim (inline dual-tan))
@@ -217,8 +192,6 @@
      (cl:/ im (cl:expt (cl:cos re) 2)))))
 
 (define-one-arg-fn tan dual-tan cl:tan)
-(sb-c:defoptimizer (tan sb-c:derive-type) ((x))
-  (irrat-derive-type x))
 
 ;; Hyper-trigonometric
 ;; sinh
@@ -232,8 +205,6 @@
      (cl:* (cl:cosh re) im))))
 
 (define-one-arg-fn sinh dual-sinh cl:sinh)
-(sb-c:defoptimizer (sinh sb-c:derive-type) ((x))
-  (irrat-derive-type x))
 
 ;; cosh
 (declaim (inline dual-cosh))
@@ -246,8 +217,6 @@
      (cl:* (cl:sinh re) im))))
 
 (define-one-arg-fn cosh dual-cosh cl:cosh)
-(sb-c:defoptimizer (cosh sb-c:derive-type) ((x))
-  (irrat-derive-type x 1))
 
 ;; tanh
 (declaim (inline dual-tanh))
@@ -260,5 +229,3 @@
      (cl:/ im (cl:expt (cl:cosh re) 2)))))
 
 (define-one-arg-fn tanh dual-tanh cl:tanh)
-(sb-c:defoptimizer (tanh sb-c:derive-type) ((x))
-  (irrat-derive-type x -1 1))
