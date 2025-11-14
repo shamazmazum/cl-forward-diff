@@ -20,16 +20,26 @@
   (simd:make-f64.2 realpart imagpart))
 
 (declaim (inline dual-realpart))
-(sera:-> dual-realpart (dual)
-         (values double-float &optional))
+(sera:-> dual-realpart (ext-number)
+         (values ext-number &optional))
 (defun dual-realpart (x)
-  (nth-value 0 (simd:f64.2-values x)))
+  "For a dual number X, return its real part. For a real number,
+return X."
+  (if (typep x 'dual)
+      (nth-value 0 (simd:f64.2-values x))
+      x))
 
 (declaim (inline dual-imagpart))
-(sera:-> dual-imagpart (dual)
-         (values double-float &optional))
+(sera:-> dual-imagpart (ext-number)
+         (values ext-number &optional))
 (defun dual-imagpart (x)
-  (nth-value 1 (simd:f64.2-values x)))
+  "For a dual number X, return its imaginary part. For a real number,
+return 0 of the same type as X."
+  (typecase x
+    (dual (nth-value 1 (simd:f64.2-values x)))
+    (single-float 0.0)
+    (double-float 0d0)
+    (t 0)))
 
 (defmacro decompose-dual ((re im) form &body body)
   `(multiple-value-bind (,re ,im)
