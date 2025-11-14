@@ -1,5 +1,11 @@
 # Changelog
 
+## New in version 0.6
+
+* `defgeneric` was removed :) It's too hard to maintain it.
+* `dual-realpart` and `dual-imagpart` work with real arguments in the same
+  manner as `realpart` and `imagpart` from the `CL` package.
+
 ## New in version 0.5
 
 * `DEFGENERIC` macro with additional type checks for too generic functions. This
@@ -8,8 +14,8 @@
 
 ## New in version 0.4
 
-* Do not arguments to `dual` if it is not required. You can now call these
-  functions with `real` values and get `real`.
+* Do not convert arguments to `dual` if it is not required. You can now call
+  these functions with `real` values and get `real`.
 
 ## New in version 0.3
 
