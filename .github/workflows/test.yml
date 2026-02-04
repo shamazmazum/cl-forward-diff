@@ -11,9 +11,14 @@ jobs:
       - name: Install roswell
         run: |
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
-      - name: Install Ultralisp
+      - name: Install qlot
         run: |
-          ros -e '(ql-dist:install-dist "http://dist.ultralisp.org/" :prompt nil)'
+          ros install qlot
+      - name: Set Path
+        run: |
+          echo "${HOME}/.roswell/bin" >> $GITHUB_PATH
       - name: Run tests
         run: |
-          ros -l $GITHUB_WORKSPACE/tests/ci.lisp
+          cd $GITHUB_WORKSPACE
+          qlot install
+          qlot exec ros -l tests/ci.lisp
